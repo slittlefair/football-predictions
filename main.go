@@ -35,6 +35,7 @@ type Prediction struct {
 	HomeScore *int `csv:"Home Score"`
 	AwayScore *int `csv:"Away Score"`
 	Points    int
+	Joker     bool `csv:"Joker"`
 }
 
 type CompPlacements struct {
@@ -124,7 +125,10 @@ func main() {
 			if !ok {
 				panic(fmt.Errorf("match not found: %v", p.ID))
 			}
-			score := p.scorePrediction(match, now)
+			score := p.scoreMatch(match, now)
+			if p.Joker {
+				score *= 2
+			}
 			p.Points = score
 			part.TotalPoints += score
 		}
@@ -161,7 +165,7 @@ func main() {
 	}
 }
 
-func (p *Prediction) scorePrediction(m *Match, now time.Time) int {
+func (p *Prediction) scoreMatch(m *Match, now time.Time) int {
 	if !m.isValidMatch(now) {
 		return 0
 	}
