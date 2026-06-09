@@ -1,0 +1,8 @@
+# Air
+tmp/
+
+# User submitted predictions
+data/predictions/
+
+# macOS
+.DS_Store
