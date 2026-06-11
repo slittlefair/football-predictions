@@ -1,5 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
 import { getParticipants, getTournamentPredictions } from '@/api';
 import {
   Table,
@@ -9,6 +7,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { faWarning } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/tournament')({
   component: RouteComponent,
@@ -26,6 +28,9 @@ function RouteComponent() {
   if (!participants || !tournamentPredictions) {
     return null;
   }
+
+  const cellContent = (s?: string) => s || <FontAwesomeIcon color="red" icon={faWarning} />
+
   return (
     <>
       <h3 className="display-title">Tournament Predictions</h3>
@@ -49,11 +54,11 @@ function RouteComponent() {
             return (
               <TableRow key={p}>
                 <TableCell>{p}</TableCell>
-                <TableCell>{pr.Winner}</TableCell>
-                <TableCell>{pr.RunnerUp}</TableCell>
-                <TableCell>{pr.ThirdPlace}</TableCell>
-                <TableCell>{pr.FourthPlace}</TableCell>
-                <TableCell>{pr.TopScorer}</TableCell>
+                <TableCell>{cellContent(pr.Winner)}</TableCell>
+                <TableCell>{cellContent(pr.RunnerUp)}</TableCell>
+                <TableCell>{cellContent(pr.ThirdPlace)}</TableCell>
+                <TableCell>{cellContent(pr.FourthPlace)}</TableCell>
+                <TableCell>{cellContent(pr.TopScorer)}</TableCell>
               </TableRow>
             );
           })}
