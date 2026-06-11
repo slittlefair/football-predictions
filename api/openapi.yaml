@@ -1,0 +1,112 @@
+openapi: 3.0.3
+
+info:
+  title: World Cup Predictions API
+  version: 1.0.0
+  
+components:
+  schemas:
+    MatchEntry:
+      type: object
+      required:
+        - id
+        - date
+        - round
+        - homeTeam
+        - awayTeam
+        - complete
+      properties:
+        id:
+          type: integer
+
+        date:
+          type: string
+          format: date-time
+
+        round:
+          type: string
+
+        homeTeam:
+          type: string
+
+        homeScore:
+          type: integer
+          nullable: true
+
+        awayTeam:
+          type: string
+
+        awayScore:
+          type: integer
+          nullable: true
+
+        complete:
+          type: boolean
+    
+    Prediction:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+
+        homeScore:
+          type: integer
+
+        awayScore:
+          type: integer
+
+        usedJoker:
+          type: boolean
+
+
+    Participant:
+      type: object
+      required:
+        - name
+        - predictions
+        # - tournamentPredictions
+        - totalPoints
+
+      properties:
+        name:
+          type: string
+
+        predictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prediction"
+
+        totalPoints:
+          type: integer
+
+
+paths:
+  /api/matches:
+    get:
+      operationId: getMatches
+      summary: Get all matches
+      responses:
+        "200":
+          description: List of matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatchEntry"
+  
+  /api/participants:
+    get:
+      operationId: getParticipants
+      summary: Get all participants
+      responses:
+        "200":
+          description: List of participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Participant"

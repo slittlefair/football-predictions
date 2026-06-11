@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"footballpredictions/api/gen"
 	"net/http"
 	"sort"
 	"strconv"
@@ -44,22 +45,11 @@ func leaderboardHandler(participantsLookup map[string]*Participant) http.Handler
 	}
 }
 
-type MatchEntry struct {
-	ID        int       `json:"id"`
-	Date      time.Time `json:"date"`
-	Round     string    `json:"round"`
-	HomeTeam  string    `json:"home_team"`
-	HomeScore *int      `json:"home_score,omitempty"`
-	AwayTeam  string    `json:"away_team"`
-	AwayScore *int      `json:"away_score,omitempty"`
-	Complete  bool      `json:"complete"`
-}
-
 func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		now := time.Now()
 
-		entries := make([]*MatchEntry, 0, len(matchLookup))
+		entries := make([]*gen.MatchEntry, 0, len(matchLookup))
 
 		for _, m := range matchLookup {
 			entry := convertMatchToEntry(m, now)
@@ -78,7 +68,7 @@ func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 	}
 }
 
-func convertMatchToEntry(match *Match, now time.Time) *MatchEntry {
+func convertMatchToEntry(match *Match, now time.Time) *gen.MatchEntry {
 	complete := now.After(match.Date.Add(time.Hour * 2))
 	homeScore := match.HomeScore
 	awayScore := match.AwayScore
@@ -92,8 +82,8 @@ func convertMatchToEntry(match *Match, now time.Time) *MatchEntry {
 		round = match.Group
 	}
 
-	return &MatchEntry{
-		ID:        match.ID,
+	return &gen.MatchEntry{
+		Id:        match.ID,
 		Date:      match.Date,
 		Round:     round,
 		HomeTeam:  match.Home,
@@ -150,14 +140,34 @@ func participantHandler(participantsLookup map[string]*Participant) http.Handler
 	}
 }
 
+func mapPrediction(p *Prediction) gen.Prediction {
+	return gen.Prediction{
+		Id:        p.ID,
+		HomeScore: p.HomeScore,
+		AwayScore: p.AwayScore,
+		UsedJoker: &p.Joker,
+	}
+}
+
 func participantsHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		participants := make([]string, 0, len(participantsLookup))
+		participants := make([]gen.Participant, 0, len(participantsLookup))
 		for _, v := range participantsLookup {
-			participants = append(participants, v.Name)
+			predictions := make([]gen.Prediction, 0, len(v.Predictions))
+			for _, p := range v.Predictions {
+				predictions = append(predictions, mapPrediction(p))
+			}
+
+			participants = append(participants, gen.Participant{
+				Name:        v.Name,
+				Predictions: predictions,
+				TotalPoints: v.TotalPoints,
+			})
 		}
 
-		sort.Strings(participants)
+		sort.Slice(participants, func(i, j int) bool {
+			return participants[i].Name < participants[j].Name
+		})
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")

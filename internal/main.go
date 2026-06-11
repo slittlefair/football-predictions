@@ -53,7 +53,6 @@ type CompPrediction struct {
 
 type Participant struct {
 	Name           string
-	Preds          []*Prediction
 	Predictions    map[int]*Prediction
 	CompPrediction *CompPrediction
 	TotalPoints    int

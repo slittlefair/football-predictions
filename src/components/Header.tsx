@@ -1,17 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { getParticipants } from '@/api';
+import { useGetParticipants } from '@/api/generated';
 import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   return (
-    <header className="z-50 border-b border-(--border) px-4 backdrop-blur-lg">
+    <header className="z-50 border-b border-border px-4 backdrop-blur-lg">
       <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
         <div className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm font-semibold sm:order-0 sm:w-auto sm:flex-nowrap sm:pb-0">
           <Link to="/" className="nav-link" activeProps={{ className: 'nav-link is-active' }}>
             Home
           </Link>
-          <Link to="/about" className="nav-link" activeProps={{ className: 'nav-link is-active' }}>
+          <Link
+            to="/matches"
+            className="nav-link"
+            activeProps={{ className: 'nav-link is-active' }}
+          >
             Matches
           </Link>
           <Link
@@ -33,9 +36,9 @@ export default function Header() {
 }
 
 const ParticipantsDropdown = () => {
-  const query = useQuery({ queryKey: ['participants'], queryFn: getParticipants });
+  const { data } = useGetParticipants();
 
-  if (query.isLoading || !query.data) {
+  if (!data) {
     return null;
   }
 
@@ -44,13 +47,13 @@ const ParticipantsDropdown = () => {
       <summary className="nav-link list-none cursor-pointer">Participants</summary>
 
       <div className="mt-2 min-w-56 rounded-xl border border-(--line) bg-green-100 p-2 shadow-lg sm:absolute sm:right-0">
-        {query.data.map(p => (
+        {data.data.map(p => (
           <a
-            key={p}
-            href={p}
+            key={p.name}
+            href={p.name}
             className="block rounded-lg px-3 py-2 text-sm text-green-700 no-underline transition hover:bg-green-700 hover:text-green-200"
           >
-            {p}
+            {p.name}
           </a>
         ))}
       </div>
