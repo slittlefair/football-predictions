@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"footballpredictions/api/gen"
 	"net/http"
 	"sort"
@@ -123,7 +124,7 @@ func matchHandler(matchLookup map[int]*Match) http.HandlerFunc {
 
 func participantHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
+		id := r.PathValue("name")
 
 		part, ok := participantsLookup[id]
 		if !ok {
@@ -131,10 +132,13 @@ func participantHandler(participantsLookup map[string]*Participant) http.Handler
 			return
 		}
 
+		fmt.Println(id)
+		fmt.Printf("%v\n", part)
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		if err := json.NewEncoder(w).Encode(part); err != nil {
+		if err := json.NewEncoder(w).Encode(mapParticipant(part)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -149,20 +153,24 @@ func mapPrediction(p *Prediction) gen.Prediction {
 	}
 }
 
+func mapParticipant(p *Participant) gen.Participant {
+	predictions := make([]gen.Prediction, 0, len(p.Predictions))
+	for _, p := range p.Predictions {
+		predictions = append(predictions, mapPrediction(p))
+	}
+
+	return gen.Participant{
+		Name:        p.Name,
+		Predictions: predictions,
+		TotalPoints: p.TotalPoints,
+	}
+}
+
 func participantsHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		participants := make([]gen.Participant, 0, len(participantsLookup))
 		for _, v := range participantsLookup {
-			predictions := make([]gen.Prediction, 0, len(v.Predictions))
-			for _, p := range v.Predictions {
-				predictions = append(predictions, mapPrediction(p))
-			}
-
-			participants = append(participants, gen.Participant{
-				Name:        v.Name,
-				Predictions: predictions,
-				TotalPoints: v.TotalPoints,
-			})
+			participants = append(participants, mapParticipant(v))
 		}
 
 		sort.Slice(participants, func(i, j int) bool {

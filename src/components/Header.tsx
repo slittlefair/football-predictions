@@ -48,13 +48,14 @@ const ParticipantsDropdown = () => {
 
       <div className="mt-2 min-w-56 rounded-xl border border-(--line) bg-green-100 p-2 shadow-lg sm:absolute sm:right-0">
         {data.data.map(p => (
-          <a
+          <Link
             key={p.name}
-            href={p.name}
+            to="/participants/$name"
+            params={{ name: p.name }}
             className="block rounded-lg px-3 py-2 text-sm text-green-700 no-underline transition hover:bg-green-700 hover:text-green-200"
           >
             {p.name}
-          </a>
+          </Link>
         ))}
       </div>
     </details>

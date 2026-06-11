@@ -278,3 +278,130 @@ export function useGetParticipants<TData = Awaited<ReturnType<typeof getParticip
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+
+
+
+
+
+
+export type getParticipantResponse200 = {
+  data: Participant
+  status: 200
+}
+
+export type getParticipantResponse400 = {
+  data: void
+  status: 400
+}
+
+export type getParticipantResponseSuccess = (getParticipantResponse200) & {
+  headers: Headers;
+};
+export type getParticipantResponseError = (getParticipantResponse400) & {
+  headers: Headers;
+};
+
+export type getParticipantResponse = (getParticipantResponseSuccess | getParticipantResponseError)
+
+export const getGetParticipantUrl = (name: string,) => {
+
+
+
+
+  return `/api/participants/${name}`
+}
+
+/**
+ * @summary Get a participant by name
+ */
+export const getParticipant = async (name: string, options?: RequestInit): Promise<getParticipantResponse> => {
+
+  const res = await fetch(getGetParticipantUrl(name),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getParticipantResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getParticipantResponse
+}
+
+
+
+
+
+export const getGetParticipantQueryKey = (name: string,) => {
+    return [
+    `/api/participants/${name}`
+    ] as const;
+    }
+
+
+export const getGetParticipantQueryOptions = <TData = Awaited<ReturnType<typeof getParticipant>>, TError = void>(name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getParticipant>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetParticipantQueryKey(name);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getParticipant>>> = ({ signal }) => getParticipant(name, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: name !== null && name !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getParticipant>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetParticipantQueryResult = NonNullable<Awaited<ReturnType<typeof getParticipant>>>
+export type GetParticipantQueryError = void
+
+
+export function useGetParticipant<TData = Awaited<ReturnType<typeof getParticipant>>, TError = void>(
+ name: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getParticipant>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getParticipant>>,
+          TError,
+          Awaited<ReturnType<typeof getParticipant>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetParticipant<TData = Awaited<ReturnType<typeof getParticipant>>, TError = void>(
+ name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getParticipant>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getParticipant>>,
+          TError,
+          Awaited<ReturnType<typeof getParticipant>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetParticipant<TData = Awaited<ReturnType<typeof getParticipant>>, TError = void>(
+ name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getParticipant>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a participant by name
+ */
+
+export function useGetParticipant<TData = Awaited<ReturnType<typeof getParticipant>>, TError = void>(
+ name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getParticipant>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetParticipantQueryOptions(name,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

@@ -110,3 +110,24 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Participant"
+
+  /api/participants/{name}:
+    get:
+      operationId: getParticipant
+      summary: Get a participant by name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A single participant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Participant"
+        "400":
+          description: Participant not found
+                  
