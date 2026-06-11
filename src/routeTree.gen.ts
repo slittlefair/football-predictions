@@ -10,16 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TournamentRouteImport } from './routes/tournament'
-import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as MatchesRouteRouteImport } from './routes/matches/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MatchesIndexRouteImport } from './routes/matches/index'
 import { Route as ParticipantsNameRouteImport } from './routes/participants.$name'
+import { Route as MatchesIdRouteImport } from './routes/matches/$id'
 
 const TournamentRoute = TournamentRouteImport.update({
   id: '/tournament',
   path: '/tournament',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MatchesRoute = MatchesRouteImport.update({
+const MatchesRouteRoute = MatchesRouteRouteImport.update({
   id: '/matches',
   path: '/matches',
   getParentRoute: () => rootRouteImport,
@@ -29,42 +31,70 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchesIndexRoute = MatchesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MatchesRouteRoute,
+} as any)
 const ParticipantsNameRoute = ParticipantsNameRouteImport.update({
   id: '/participants/$name',
   path: '/participants/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchesIdRoute = MatchesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MatchesRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/matches': typeof MatchesRoute
+  '/matches': typeof MatchesRouteRouteWithChildren
   '/tournament': typeof TournamentRoute
+  '/matches/$id': typeof MatchesIdRoute
   '/participants/$name': typeof ParticipantsNameRoute
+  '/matches/': typeof MatchesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/matches': typeof MatchesRoute
   '/tournament': typeof TournamentRoute
+  '/matches/$id': typeof MatchesIdRoute
   '/participants/$name': typeof ParticipantsNameRoute
+  '/matches': typeof MatchesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/matches': typeof MatchesRoute
+  '/matches': typeof MatchesRouteRouteWithChildren
   '/tournament': typeof TournamentRoute
+  '/matches/$id': typeof MatchesIdRoute
   '/participants/$name': typeof ParticipantsNameRoute
+  '/matches/': typeof MatchesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/matches' | '/tournament' | '/participants/$name'
+  fullPaths:
+    | '/'
+    | '/matches'
+    | '/tournament'
+    | '/matches/$id'
+    | '/participants/$name'
+    | '/matches/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/matches' | '/tournament' | '/participants/$name'
-  id: '__root__' | '/' | '/matches' | '/tournament' | '/participants/$name'
+  to: '/' | '/tournament' | '/matches/$id' | '/participants/$name' | '/matches'
+  id:
+    | '__root__'
+    | '/'
+    | '/matches'
+    | '/tournament'
+    | '/matches/$id'
+    | '/participants/$name'
+    | '/matches/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  MatchesRoute: typeof MatchesRoute
+  MatchesRouteRoute: typeof MatchesRouteRouteWithChildren
   TournamentRoute: typeof TournamentRoute
   ParticipantsNameRoute: typeof ParticipantsNameRoute
 }
@@ -82,7 +112,7 @@ declare module '@tanstack/react-router' {
       id: '/matches'
       path: '/matches'
       fullPath: '/matches'
-      preLoaderRoute: typeof MatchesRouteImport
+      preLoaderRoute: typeof MatchesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -92,6 +122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/matches/': {
+      id: '/matches/'
+      path: '/'
+      fullPath: '/matches/'
+      preLoaderRoute: typeof MatchesIndexRouteImport
+      parentRoute: typeof MatchesRouteRoute
+    }
     '/participants/$name': {
       id: '/participants/$name'
       path: '/participants/$name'
@@ -99,12 +136,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParticipantsNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/matches/$id': {
+      id: '/matches/$id'
+      path: '/$id'
+      fullPath: '/matches/$id'
+      preLoaderRoute: typeof MatchesIdRouteImport
+      parentRoute: typeof MatchesRouteRoute
+    }
   }
 }
 
+interface MatchesRouteRouteChildren {
+  MatchesIdRoute: typeof MatchesIdRoute
+  MatchesIndexRoute: typeof MatchesIndexRoute
+}
+
+const MatchesRouteRouteChildren: MatchesRouteRouteChildren = {
+  MatchesIdRoute: MatchesIdRoute,
+  MatchesIndexRoute: MatchesIndexRoute,
+}
+
+const MatchesRouteRouteWithChildren = MatchesRouteRoute._addFileChildren(
+  MatchesRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  MatchesRoute: MatchesRoute,
+  MatchesRouteRoute: MatchesRouteRouteWithChildren,
   TournamentRoute: TournamentRoute,
   ParticipantsNameRoute: ParticipantsNameRoute,
 }

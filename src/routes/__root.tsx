@@ -23,7 +23,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Roasties World Cup Preictions',
+        title: 'Roasties World Cup Predictions',
       },
     ],
     links: [

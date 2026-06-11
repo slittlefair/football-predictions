@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"footballpredictions/api/gen"
 	"net/http"
 	"sort"
@@ -50,7 +49,7 @@ func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		now := time.Now()
 
-		entries := make([]*gen.MatchEntry, 0, len(matchLookup))
+		entries := make([]gen.Match, 0, len(matchLookup))
 
 		for _, m := range matchLookup {
 			entry := convertMatchToEntry(m, now)
@@ -69,7 +68,7 @@ func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 	}
 }
 
-func convertMatchToEntry(match *Match, now time.Time) *gen.MatchEntry {
+func convertMatchToEntry(match *Match, now time.Time) gen.Match {
 	complete := now.After(match.Date.Add(time.Hour * 2))
 	homeScore := match.HomeScore
 	awayScore := match.AwayScore
@@ -83,7 +82,7 @@ func convertMatchToEntry(match *Match, now time.Time) *gen.MatchEntry {
 		round = match.Group
 	}
 
-	return &gen.MatchEntry{
+	return gen.Match{
 		Id:        match.ID,
 		Date:      match.Date,
 		Round:     round,
@@ -95,7 +94,7 @@ func convertMatchToEntry(match *Match, now time.Time) *gen.MatchEntry {
 	}
 }
 
-func matchHandler(matchLookup map[int]*Match) http.HandlerFunc {
+func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Participant) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		idStr := r.PathValue("id")
@@ -113,10 +112,29 @@ func matchHandler(matchLookup map[int]*Match) http.HandlerFunc {
 
 		entry := convertMatchToEntry(match, now)
 
+		matchPredictions := gen.MatchPredictions{
+			Id:    match.ID,
+			Match: entry,
+		}
+
+		for _, p := range participantsLookup {
+			for _, pred := range p.Predictions {
+				if pred.ID == match.ID {
+					matchPredictions.Predictions = append(matchPredictions.Predictions, gen.Prediction{
+						HomeScore:   pred.HomeScore,
+						AwayScore:   pred.AwayScore,
+						UsedJoker:   &pred.Joker,
+						Participant: p.Name,
+						Points:      pred.Points,
+					})
+				}
+			}
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		if err := json.NewEncoder(w).Encode(entry); err != nil {
+		if err := json.NewEncoder(w).Encode(matchPredictions); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -131,9 +149,6 @@ func participantHandler(participantsLookup map[string]*Participant) http.Handler
 			http.NotFound(w, r)
 			return
 		}
-
-		fmt.Println(id)
-		fmt.Printf("%v\n", part)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -159,10 +174,21 @@ func mapParticipant(p *Participant) gen.Participant {
 		predictions = append(predictions, mapPrediction(p))
 	}
 
+	sort.Slice(predictions, func(i, j int) bool {
+		return predictions[i].Id < predictions[j].Id
+	})
+
 	return gen.Participant{
 		Name:        p.Name,
 		Predictions: predictions,
 		TotalPoints: p.TotalPoints,
+		TournamentPredictions: gen.TournamentPredictions{
+			Winner:      p.CompPrediction.Winner,
+			RunnerUp:    p.CompPrediction.RunnerUp,
+			ThirdPlace:  p.CompPrediction.ThirdPlace,
+			FourthPlace: p.CompPrediction.FourthPlace,
+			TopScorer:   p.CompPrediction.TopScorer,
+		},
 	}
 }
 

@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// MatchEntry defines model for MatchEntry.
-type MatchEntry struct {
+// Match defines model for Match.
+type Match struct {
 	AwayScore *int      `json:"awayScore,omitempty"`
 	AwayTeam  string    `json:"awayTeam"`
 	Complete  bool      `json:"complete"`
@@ -19,17 +19,36 @@ type MatchEntry struct {
 	Round     string    `json:"round"`
 }
 
+// MatchPredictions defines model for MatchPredictions.
+type MatchPredictions struct {
+	Id          int          `json:"id"`
+	Match       Match        `json:"match"`
+	Predictions []Prediction `json:"predictions"`
+}
+
 // Participant defines model for Participant.
 type Participant struct {
-	Name        string       `json:"name"`
-	Predictions []Prediction `json:"predictions"`
-	TotalPoints int          `json:"totalPoints"`
+	Name                  string                `json:"name"`
+	Predictions           []Prediction          `json:"predictions"`
+	TotalPoints           int                   `json:"totalPoints"`
+	TournamentPredictions TournamentPredictions `json:"tournamentPredictions"`
 }
 
 // Prediction defines model for Prediction.
 type Prediction struct {
-	AwayScore *int  `json:"awayScore,omitempty"`
-	HomeScore *int  `json:"homeScore,omitempty"`
-	Id        int   `json:"id"`
-	UsedJoker *bool `json:"usedJoker,omitempty"`
+	AwayScore   *int   `json:"awayScore,omitempty"`
+	HomeScore   *int   `json:"homeScore,omitempty"`
+	Id          int    `json:"id"`
+	Participant string `json:"participant"`
+	Points      int    `json:"points"`
+	UsedJoker   *bool  `json:"usedJoker,omitempty"`
+}
+
+// TournamentPredictions defines model for TournamentPredictions.
+type TournamentPredictions struct {
+	FourthPlace string `json:"fourthPlace"`
+	RunnerUp    string `json:"runnerUp"`
+	ThirdPlace  string `json:"thirdPlace"`
+	TopScorer   string `json:"topScorer"`
+	Winner      string `json:"winner"`
 }

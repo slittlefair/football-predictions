@@ -6,7 +6,7 @@ info:
   
 components:
   schemas:
-    MatchEntry:
+    Match:
       type: object
       required:
         - id
@@ -42,13 +42,39 @@ components:
 
         complete:
           type: boolean
+
+    MatchPredictions:
+      type: object
+      required:
+        - id
+        - match
+        - predictions
+      properties:
+        id:
+          type: integer
+
+        match:
+          $ref: "#/components/schemas/Match"
+          
+        predictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prediction"
     
     Prediction:
       type: object
       required:
         - id
+        - participant
+        - points
       properties:
         id:
+          type: integer
+
+        participant:
+          type: string
+
+        points:
           type: integer
 
         homeScore:
@@ -66,7 +92,7 @@ components:
       required:
         - name
         - predictions
-        # - tournamentPredictions
+        - tournamentPredictions
         - totalPoints
 
       properties:
@@ -78,8 +104,36 @@ components:
           items:
             $ref: "#/components/schemas/Prediction"
 
+        tournamentPredictions:
+          $ref: "#/components/schemas/TournamentPredictions"
+
         totalPoints:
           type: integer
+
+    TournamentPredictions:
+      type: object
+      required:
+        - winner
+        - runnerUp
+        - thirdPlace
+        - fourthPlace
+        - topScorer
+      
+      properties:
+        winner:
+          type: string
+
+        runnerUp:
+          type: string
+        
+        thirdPlace:
+          type: string
+
+        fourthPlace:
+          type: string
+
+        topScorer:
+          type: string
 
 
 paths:
@@ -95,7 +149,27 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/MatchEntry"
+                  $ref: "#/components/schemas/Match"
+              
+  /api/matches/{id}:
+    get:
+      operationId: getMatch
+      summary: Get a match with its predictions by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A single match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchPredictions"
+        "400":
+          description: Participant not found
   
   /api/participants:
     get:

@@ -152,7 +152,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/leaderboard", leaderboardHandler(participantsLookup))
 	mux.HandleFunc("/api/matches", matchesHandler(matchLookup))
-	mux.HandleFunc("/api/matches/{id}", matchHandler(matchLookup))
+	mux.HandleFunc("/api/matches/{id}", matchHandler(matchLookup, participantsLookup))
 	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup))
 	mux.HandleFunc("/api/participants/{name}", participantHandler(participantsLookup))
 	mux.HandleFunc("/api/tournament", tournamentHandler(participantsLookup))

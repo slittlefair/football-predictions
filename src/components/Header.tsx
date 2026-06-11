@@ -38,7 +38,7 @@ export default function Header() {
 const ParticipantsDropdown = () => {
   const { data } = useGetParticipants();
 
-  if (!data) {
+  if (!data?.data) {
     return null;
   }
 

@@ -1,4 +1,7 @@
-import { getParticipants, getTournamentPredictions } from '@/api';
+import { faWarning } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { createFileRoute } from '@tanstack/react-router';
+import { useGetParticipants } from '@/api/generated';
 import {
   Table,
   TableBody,
@@ -7,35 +10,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { faWarning } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/tournament')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: tournamentPredictions } = useQuery({
-    queryKey: ['tournamentPredictions'],
-    queryFn: getTournamentPredictions,
-  });
-  const { data: participants } = useQuery({
-    queryKey: ['participants'],
-    queryFn: getParticipants,
-  });
-  if (!participants || !tournamentPredictions) {
+  const { data: participantsData } = useGetParticipants();
+  if (!participantsData?.data) {
     return null;
   }
 
-  const cellContent = (s?: string) => s || <FontAwesomeIcon color="red" icon={faWarning} />
+  const { data: participants } = participantsData;
+
+  const cellContent = (s?: string) => s || <FontAwesomeIcon color="red" icon={faWarning} />;
 
   return (
-    <>
-      <h3 className="display-title">Tournament Predictions</h3>
-      <Table className="w-2xl">
-        <TableHeader>
+    <div className="p-3">
+      <h3 className="display-title font-bold">Tournament Predictions</h3>
+      <Table className="w-2xl m-3">
+        <TableHeader className="[&_th]:font-bold">
           <TableRow>
             <TableHead />
             <TableHead>Winner</TableHead>
@@ -47,23 +41,20 @@ function RouteComponent() {
         </TableHeader>
         <TableBody>
           {participants.map(p => {
-            const pr = tournamentPredictions[p];
-            if (!pr) {
-              return null;
-            }
+            const preds = p.tournamentPredictions;
             return (
-              <TableRow key={p}>
-                <TableCell>{p}</TableCell>
-                <TableCell>{cellContent(pr.Winner)}</TableCell>
-                <TableCell>{cellContent(pr.RunnerUp)}</TableCell>
-                <TableCell>{cellContent(pr.ThirdPlace)}</TableCell>
-                <TableCell>{cellContent(pr.FourthPlace)}</TableCell>
-                <TableCell>{cellContent(pr.TopScorer)}</TableCell>
+              <TableRow key={p.name}>
+                <TableCell className="font-bold">{p.name}</TableCell>
+                <TableCell>{cellContent(preds.winner)}</TableCell>
+                <TableCell>{cellContent(preds.runnerUp)}</TableCell>
+                <TableCell>{cellContent(preds.thirdPlace)}</TableCell>
+                <TableCell>{cellContent(preds.fourthPlace)}</TableCell>
+                <TableCell>{cellContent(preds.topScorer)}</TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
-    </>
+    </div>
   );
 }

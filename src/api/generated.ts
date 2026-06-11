@@ -19,7 +19,7 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-export interface MatchEntry {
+export interface Match {
   id: number;
   date: string;
   round: string;
@@ -34,19 +34,36 @@ export interface MatchEntry {
 
 export interface Prediction {
   id: number;
+  participant: string;
+  points: number;
   homeScore?: number;
   awayScore?: number;
   usedJoker?: boolean;
 }
 
+export interface MatchPredictions {
+  id: number;
+  match: Match;
+  predictions: Prediction[];
+}
+
+export interface TournamentPredictions {
+  winner: string;
+  runnerUp: string;
+  thirdPlace: string;
+  fourthPlace: string;
+  topScorer: string;
+}
+
 export interface Participant {
   name: string;
   predictions: Prediction[];
+  tournamentPredictions: TournamentPredictions;
   totalPoints: number;
 }
 
 export type getMatchesResponse200 = {
-  data: MatchEntry[]
+  data: Match[]
   status: 200
 }
 
@@ -153,6 +170,133 @@ export function useGetMatches<TData = Awaited<ReturnType<typeof getMatches>>, TE
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetMatchesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export type getMatchResponse200 = {
+  data: MatchPredictions
+  status: 200
+}
+
+export type getMatchResponse400 = {
+  data: void
+  status: 400
+}
+
+export type getMatchResponseSuccess = (getMatchResponse200) & {
+  headers: Headers;
+};
+export type getMatchResponseError = (getMatchResponse400) & {
+  headers: Headers;
+};
+
+export type getMatchResponse = (getMatchResponseSuccess | getMatchResponseError)
+
+export const getGetMatchUrl = (id: number,) => {
+
+
+
+
+  return `/api/matches/${id}`
+}
+
+/**
+ * @summary Get a match with its predictions by id
+ */
+export const getMatch = async (id: number, options?: RequestInit): Promise<getMatchResponse> => {
+
+  const res = await fetch(getGetMatchUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getMatchResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getMatchResponse
+}
+
+
+
+
+
+export const getGetMatchQueryKey = (id: number,) => {
+    return [
+    `/api/matches/${id}`
+    ] as const;
+    }
+
+
+export const getGetMatchQueryOptions = <TData = Awaited<ReturnType<typeof getMatch>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatch>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatchQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatch>>> = ({ signal }) => getMatch(id, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMatchQueryResult = NonNullable<Awaited<ReturnType<typeof getMatch>>>
+export type GetMatchQueryError = void
+
+
+export function useGetMatch<TData = Awaited<ReturnType<typeof getMatch>>, TError = void>(
+ id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatch>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMatch>>,
+          TError,
+          Awaited<ReturnType<typeof getMatch>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMatch<TData = Awaited<ReturnType<typeof getMatch>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatch>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMatch>>,
+          TError,
+          Awaited<ReturnType<typeof getMatch>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMatch<TData = Awaited<ReturnType<typeof getMatch>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatch>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a match with its predictions by id
+ */
+
+export function useGetMatch<TData = Awaited<ReturnType<typeof getMatch>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatch>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMatchQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
