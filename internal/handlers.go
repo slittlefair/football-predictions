@@ -9,8 +9,9 @@ import (
 )
 
 type LeaderboardEntry struct {
-	Name   string `json:"name"`
-	Points int    `json:"points"`
+	Name             string `json:"name"`
+	Points           int    `json:"points"`
+	PreviousPosition int    `json:"previous_position"`
 }
 
 func leaderboardHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
@@ -27,7 +28,15 @@ func leaderboardHandler(participantsLookup map[string]*Participant) http.Handler
 			})
 		}
 
+		sort.Slice(entries, func(i, j int) bool {
+			if entries[i].Points == entries[j].Points {
+				return entries[i].Name < entries[j].Name
+			}
+			return entries[i].Points > entries[j].Points
+		})
+
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		if err := json.NewEncoder(w).Encode(entries); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,6 +70,7 @@ func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 		})
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		if err := json.NewEncoder(w).Encode(entries); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -113,6 +123,7 @@ func matchHandler(matchLookup map[int]*Match) http.HandlerFunc {
 		entry := convertMatchToEntry(match, now)
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		if err := json.NewEncoder(w).Encode(entry); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -131,8 +142,27 @@ func participantHandler(participantsLookup map[string]*Participant) http.Handler
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		if err := json.NewEncoder(w).Encode(part); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func participantsHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		participants := make([]string, 0, len(participantsLookup))
+		for _, v := range participantsLookup {
+			participants = append(participants, v.Name)
+		}
+
+		sort.Strings(participants)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		if err := json.NewEncoder(w).Encode(participants); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -147,6 +177,7 @@ func tournamentHandler(participantsLookup map[string]*Participant) http.HandlerF
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		if err := json.NewEncoder(w).Encode(tournamentPredictions); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

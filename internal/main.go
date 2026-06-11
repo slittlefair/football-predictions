@@ -154,6 +154,7 @@ func main() {
 	mux.HandleFunc("/api/leaderboard", leaderboardHandler(participantsLookup))
 	mux.HandleFunc("/api/matches", matchesHandler(matchLookup))
 	mux.HandleFunc("/api/matches/{id}", matchHandler(matchLookup))
+	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup))
 	mux.HandleFunc("/api/participants/{id}", participantHandler(participantsLookup))
 	mux.HandleFunc("/api/tournament", tournamentHandler(participantsLookup))
 
