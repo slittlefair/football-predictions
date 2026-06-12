@@ -1,6 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { useGetMatches, useGetParticipant } from '@/api/generated';
+import { FlagCell } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import {
   Table,
@@ -25,7 +26,7 @@ function RouteComponent() {
   }
 
   const participant = participantResp.data;
-  const { winner, runnerUp, thirdPlace, fourthPlace, topScorer } =
+  const { winner, runnerUp, thirdPlace, fourthPlace, topScorer, scorerNationality } =
     participant.tournamentPredictions;
 
   return (
@@ -37,23 +38,23 @@ function RouteComponent() {
           <TableBody>
             <TableRow>
               <TableCell>Winner</TableCell>
-              <TableCell>{winner}</TableCell>
+              <FlagCell text={winner} />
             </TableRow>
             <TableRow>
               <TableCell>Runner Up</TableCell>
-              <TableCell>{runnerUp}</TableCell>
+              <FlagCell text={runnerUp} />
             </TableRow>
             <TableRow>
               <TableCell>Third Place</TableCell>
-              <TableCell>{thirdPlace}</TableCell>
+              <FlagCell text={thirdPlace} />
             </TableRow>
             <TableRow>
               <TableCell>Fourth Place</TableCell>
-              <TableCell>{fourthPlace}</TableCell>
+              <FlagCell text={fourthPlace} />
             </TableRow>
             <TableRow>
               <TableCell>TopScorer</TableCell>
-              <TableCell>{topScorer}</TableCell>
+              <FlagCell text={topScorer} code={scorerNationality} />
             </TableRow>
           </TableBody>
         </Table>
