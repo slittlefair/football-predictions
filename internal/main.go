@@ -231,6 +231,7 @@ func main() {
 	mux.HandleFunc("/api/participants", tournament.participantsHandler())
 	mux.HandleFunc("/api/participants/{name}", tournament.participantHandler())
 	mux.HandleFunc("/api/tournament", tournament.tournamentHandler())
+	mux.HandleFunc("/api/teams", teamsHandler())
 
 	fmt.Println("Listening on http://localhost:8080")
 
