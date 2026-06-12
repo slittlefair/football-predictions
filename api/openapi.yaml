@@ -14,6 +14,7 @@ components:
         - position
         - previousPosition
         - correctScores
+        - played
       properties:
         participant:
           type: string
@@ -29,6 +30,9 @@ components:
 
         correctScores:
           type: integer
+        
+        played:
+          type: integer
 
     Match:
       type: object
@@ -38,6 +42,7 @@ components:
         - round
         - homeTeam
         - awayTeam
+        - hasResult
       properties:
         id:
           type: integer
@@ -63,6 +68,9 @@ components:
           type: integer
           nullable: true
 
+        hasResult:
+          type: boolean
+
     MatchPredictions:
       type: object
       required:
@@ -87,6 +95,7 @@ components:
         - id
         - participant
         - points
+        - hasResult
       properties:
         id:
           type: integer
@@ -106,6 +115,8 @@ components:
         usedJoker:
           type: boolean
 
+        hasResult:
+          type: boolean
 
     Participant:
       type: object

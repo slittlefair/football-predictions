@@ -25,6 +25,7 @@ export interface Leaderboard {
   position: number;
   previousPosition: number;
   correctScores: number;
+  played: number;
 }
 
 export interface Match {
@@ -37,6 +38,7 @@ export interface Match {
   awayTeam: string;
   /** @nullable */
   awayScore?: number | null;
+  hasResult: boolean;
 }
 
 export interface Prediction {
@@ -46,6 +48,7 @@ export interface Prediction {
   homeScore?: number;
   awayScore?: number;
   usedJoker?: boolean;
+  hasResult: boolean;
 }
 
 export interface MatchPredictions {
