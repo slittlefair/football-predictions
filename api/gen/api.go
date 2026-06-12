@@ -52,11 +52,18 @@ type Prediction struct {
 	UsedJoker   *bool  `json:"usedJoker,omitempty"`
 }
 
+// Team defines model for Team.
+type Team struct {
+	Code        string `json:"code"`
+	DisplayName string `json:"displayName"`
+}
+
 // TournamentPredictions defines model for TournamentPredictions.
 type TournamentPredictions struct {
-	FourthPlace string `json:"fourthPlace"`
-	RunnerUp    string `json:"runnerUp"`
-	ThirdPlace  string `json:"thirdPlace"`
-	TopScorer   string `json:"topScorer"`
-	Winner      string `json:"winner"`
+	FourthPlace       string `json:"fourthPlace"`
+	RunnerUp          string `json:"runnerUp"`
+	ScorerNationality string `json:"scorerNationality"`
+	ThirdPlace        string `json:"thirdPlace"`
+	TopScorer         string `json:"topScorer"`
+	Winner            string `json:"winner"`
 }
