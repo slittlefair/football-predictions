@@ -60,6 +60,7 @@ export interface TournamentPredictions {
   thirdPlace: string;
   fourthPlace: string;
   topScorer: string;
+  scorerNationality: string;
 }
 
 export interface Participant {
@@ -67,6 +68,11 @@ export interface Participant {
   predictions: Prediction[];
   tournamentPredictions: TournamentPredictions;
   totalPoints: number;
+}
+
+export interface Team {
+  displayName: string;
+  code: string;
 }
 
 export type getLeaderboardResponse200 = {
@@ -671,6 +677,126 @@ export function useGetParticipant<TData = Awaited<ReturnType<typeof getParticipa
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetParticipantQueryOptions(name,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export type getTeamsResponse200 = {
+  data: Team[]
+  status: 200
+}
+
+export type getTeamsResponseSuccess = (getTeamsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getTeamsResponse = (getTeamsResponseSuccess)
+
+export const getGetTeamsUrl = () => {
+
+
+
+
+  return `/api/teams`
+}
+
+/**
+ * @summary Get all teams
+ */
+export const getTeams = async ( options?: RequestInit): Promise<getTeamsResponse> => {
+
+  const res = await fetch(getGetTeamsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getTeamsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getTeamsResponse
+}
+
+
+
+
+
+export const getGetTeamsQueryKey = () => {
+    return [
+    `/api/teams`
+    ] as const;
+    }
+
+
+export const getGetTeamsQueryOptions = <TData = Awaited<ReturnType<typeof getTeams>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTeamsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeams>>> = ({ signal }) => getTeams({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTeamsQueryResult = NonNullable<Awaited<ReturnType<typeof getTeams>>>
+export type GetTeamsQueryError = unknown
+
+
+export function useGetTeams<TData = Awaited<ReturnType<typeof getTeams>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTeams>>,
+          TError,
+          Awaited<ReturnType<typeof getTeams>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTeams<TData = Awaited<ReturnType<typeof getTeams>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTeams>>,
+          TError,
+          Awaited<ReturnType<typeof getTeams>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTeams<TData = Awaited<ReturnType<typeof getTeams>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all teams
+ */
+
+export function useGetTeams<TData = Awaited<ReturnType<typeof getTeams>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTeamsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
