@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"footballpredictions/api/gen"
 	"net/http"
+	"os"
 	"slices"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/gocarina/gocsv"
 )
 
 type PointsTallier struct {
@@ -233,11 +236,12 @@ func mapParticipant(p *Participant, matchLookup map[int]*Match) gen.Participant 
 		Predictions: predictions,
 		TotalPoints: p.TotalPoints,
 		TournamentPredictions: gen.TournamentPredictions{
-			Winner:      p.CompPrediction.Winner,
-			RunnerUp:    p.CompPrediction.RunnerUp,
-			ThirdPlace:  p.CompPrediction.ThirdPlace,
-			FourthPlace: p.CompPrediction.FourthPlace,
-			TopScorer:   p.CompPrediction.TopScorer,
+			Winner:            p.CompPrediction.Winner,
+			RunnerUp:          p.CompPrediction.RunnerUp,
+			ThirdPlace:        p.CompPrediction.ThirdPlace,
+			FourthPlace:       p.CompPrediction.FourthPlace,
+			TopScorer:         p.CompPrediction.TopScorer,
+			ScorerNationality: p.CompPrediction.ScorerNationality,
 		},
 	}
 }
@@ -274,6 +278,29 @@ func tournamentHandler(participantsLookup map[string]*Participant) http.HandlerF
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		if err := json.NewEncoder(w).Encode(tournamentPredictions); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func teamsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		resIn, err := os.Open("data/countries.csv")
+		if err != nil {
+			panic(err)
+		}
+		defer func() { _ = resIn.Close() }()
+
+		teams := []*gen.Team{}
+
+		if err := gocsv.UnmarshalFile(resIn, &teams); err != nil {
+			panic(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		if err := json.NewEncoder(w).Encode(teams); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
