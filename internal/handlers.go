@@ -4,16 +4,29 @@ import (
 	"encoding/json"
 	"footballpredictions/api/gen"
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
 )
 
-type LeaderboardEntry struct {
-	Name           string `json:"name"`
-	Points         int    `json:"points"`
-	PreviousPoints int
-	CorrectScores  int
+type PointsTallier struct {
+	Name          string `json:"name"`
+	Points        int    `json:"points"`
+	CorrectScores int
+}
+
+func sortPointsTallier(a, b *PointsTallier) int {
+	if a.Points == b.Points {
+		if a.CorrectScores == b.CorrectScores {
+			if a.Name < b.Name {
+				return -1
+			}
+			return 1
+		}
+		return b.CorrectScores - a.CorrectScores
+	}
+	return b.Points - a.Points
 }
 
 func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
@@ -24,10 +37,12 @@ func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup 
 		now := time.Now()
 		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
-		entries := make([]LeaderboardEntry, 0, len(participantsLookup))
+		currentPoints := make([]*PointsTallier, 0, len(participantsLookup))
+		previousPoints := make([]*PointsTallier, 0, len(participantsLookup))
 
 		for _, p := range participantsLookup {
-			entry := LeaderboardEntry{Name: p.Name}
+			curr := &PointsTallier{Name: p.Name}
+			prev := &PointsTallier{Name: p.Name}
 			for _, pred := range p.Predictions {
 				match, ok := matchLookup[pred.ID]
 				if !ok {
@@ -36,49 +51,39 @@ func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup 
 				}
 
 				score, wasCorrect := pred.scoreMatch(match)
-				entry.Points += score
+				curr.Points += score
+				if wasCorrect {
+					curr.CorrectScores++
+				}
 				if !match.Date.Before(startOfToday) {
 					continue
 				}
-				entry.PreviousPoints += score
+
+				prev.Points += score
 				if wasCorrect {
-					entry.CorrectScores++
+					prev.CorrectScores++
 				}
 			}
-			entries = append(entries, entry)
+			currentPoints = append(currentPoints, curr)
+			previousPoints = append(previousPoints, prev)
 		}
 
-		sort.Slice(entries, func(i, j int) bool {
-			if entries[i].PreviousPoints == entries[j].PreviousPoints {
-				if entries[i].CorrectScores == entries[j].CorrectScores {
-					return entries[i].Name < entries[j].Name
-				}
-				return entries[i].CorrectScores == entries[j].CorrectScores
-			}
-			return entries[i].Points > entries[j].Points
-		})
-
-		prevPositions := map[string]int{}
-		for i, v := range entries {
-			prevPositions[v.Name] = i + 1
-		}
-
-		sort.Slice(entries, func(i, j int) bool {
-			if entries[i].Points == entries[j].Points {
-				return entries[i].Name < entries[j].Name
-			}
-			return entries[i].Points > entries[j].Points
-		})
+		slices.SortStableFunc(currentPoints, sortPointsTallier)
+		slices.SortStableFunc(previousPoints, sortPointsTallier)
 
 		leaderboard := []gen.Leaderboard{}
 
-		for i, v := range entries {
+		for i, v := range currentPoints {
+			previousPosition := slices.IndexFunc(
+				previousPoints,
+				func(p *PointsTallier) bool { return p.Name == v.Name },
+			)
 			leaderboard = append(leaderboard, gen.Leaderboard{
 				Participant:      v.Name,
 				CorrectScores:    v.CorrectScores,
 				Position:         i + 1,
 				TotalPoints:      v.Points,
-				PreviousPosition: prevPositions[v.Name],
+				PreviousPosition: previousPosition + 1,
 			})
 		}
 
