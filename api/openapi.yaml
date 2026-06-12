@@ -138,6 +138,7 @@ components:
         - thirdPlace
         - fourthPlace
         - topScorer
+        - scorerNationality
       
       properties:
         winner:
@@ -153,6 +154,22 @@ components:
           type: string
 
         topScorer:
+          type: string
+        
+        scorerNationality:
+          type: string
+
+    Team:
+      type: object
+      required:
+        - displayName
+        - code
+
+      properties:
+        displayName:
+          type: string
+
+        code:
           type: string
 
 
@@ -238,4 +255,18 @@ paths:
                 $ref: "#/components/schemas/Participant"
         "400":
           description: Participant not found
+
+  /api/teams:
+    get:
+      operationId: getTeams
+      summary: Get all teams
+      responses:
+        "200":
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
                   

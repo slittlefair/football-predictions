@@ -37,11 +37,12 @@ type Prediction struct {
 }
 
 type CompPlacements struct {
-	Winner      string `csv:"Winner"`
-	RunnerUp    string `csv:"Runner Up"`
-	ThirdPlace  string `csv:"Third Place"`
-	FourthPlace string `csv:"Fourth Place"`
-	TopScorer   string `csv:"Top Scorer"`
+	Winner            string `csv:"Winner"`
+	RunnerUp          string `csv:"Runner Up"`
+	ThirdPlace        string `csv:"Third Place"`
+	FourthPlace       string `csv:"Fourth Place"`
+	TopScorer         string `csv:"Top Scorer"`
+	ScorerNationality string `csv:"Nationality"`
 }
 
 type TournamentPrediction struct {

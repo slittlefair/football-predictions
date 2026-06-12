@@ -1,7 +1,6 @@
-import { faWarning } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute } from '@tanstack/react-router';
 import { useGetParticipants } from '@/api/generated';
+import { TeamDisplay } from '@/components/TeamDisplay';
 import {
   Table,
   TableBody,
@@ -23,8 +22,6 @@ function RouteComponent() {
 
   const { data: participants } = participantsData;
 
-  const cellContent = (s?: string) => s || <FontAwesomeIcon color="red" icon={faWarning} />;
-
   return (
     <div className="p-3">
       <h3 className="display-title font-bold">Tournament Predictions</h3>
@@ -43,13 +40,13 @@ function RouteComponent() {
           {participants.map(p => {
             const preds = p.tournamentPredictions;
             return (
-              <TableRow key={p.name}>
+              <TableRow key={p.name} className="[&>td:not(:first-child)]:text-right">
                 <TableCell className="font-bold">{p.name}</TableCell>
-                <TableCell>{cellContent(preds.winner)}</TableCell>
-                <TableCell>{cellContent(preds.runnerUp)}</TableCell>
-                <TableCell>{cellContent(preds.thirdPlace)}</TableCell>
-                <TableCell>{cellContent(preds.fourthPlace)}</TableCell>
-                <TableCell>{cellContent(preds.topScorer)}</TableCell>
+                <FlagCell text={preds.winner} />
+                <FlagCell text={preds.runnerUp} />
+                <FlagCell text={preds.thirdPlace} />
+                <FlagCell text={preds.fourthPlace} />
+                <FlagCell text={preds.topScorer} code={preds.scorerNationality} />
               </TableRow>
             );
           })}
@@ -58,3 +55,11 @@ function RouteComponent() {
     </div>
   );
 }
+
+const FlagCell = ({ text, code }: { text: string; code?: string }) => (
+  <TableCell>
+    <div className="flex justify-start">
+      <TeamDisplay displayName={text} teamOverride={code} flagPosition="left" />
+    </div>
+  </TableCell>
+);
