@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { useGetMatch } from '@/api/generated';
-import { TeamDisplay } from '@/components/TeamDisplay';
+import { FlagDisplay } from '@/components/FlagDisplay';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 export const Route = createFileRoute('/matches/$id')({
@@ -28,8 +28,8 @@ function RouteComponent() {
   // TODO do this server side
   const haveScore = match.homeScore !== undefined && match.awayScore !== undefined;
 
-  const home = <TeamDisplay displayName={match.homeTeam} />;
-  const away = <TeamDisplay displayName={match.awayTeam} flagPosition="left" />;
+  const home = <FlagDisplay displayName={match.homeTeam} />;
+  const away = <FlagDisplay displayName={match.awayTeam} flagPosition="left" />;
 
   let display = (
     <>

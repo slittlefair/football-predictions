@@ -1,17 +1,17 @@
 import { useGetTeams } from '@/api/generated';
 import { TableCell } from '@/components/ui/table';
 
-interface ITeamDisplayProps {
+interface IFlagDisplayProps {
   displayName: string;
   flagPosition?: 'left' | 'right';
   teamOverride?: string;
 }
 
-export const TeamDisplay = ({
+export const FlagDisplay = ({
   displayName,
   teamOverride,
   flagPosition = 'right',
-}: ITeamDisplayProps) => {
+}: IFlagDisplayProps) => {
   const { data: resp } = useGetTeams();
   if (!resp) {
     return null;
@@ -39,7 +39,7 @@ export const TeamDisplay = ({
 export const FlagCell = ({ text, code }: { text: string; code?: string }) => (
   <TableCell>
     <div className="flex justify-start">
-      <TeamDisplay displayName={text} teamOverride={code} flagPosition="left" />
+      <FlagDisplay displayName={text} teamOverride={code} flagPosition="left" />
     </div>
   </TableCell>
 );

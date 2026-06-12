@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { useGetMatches, useGetParticipant } from '@/api/generated';
-import { FlagCell } from '@/components/TeamDisplay';
+import { FlagCell } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import {
   Table,

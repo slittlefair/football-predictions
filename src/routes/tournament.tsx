@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useGetParticipants } from '@/api/generated';
-import { FlagCell } from '@/components/TeamDisplay';
+import { FlagCell } from '@/components/FlagDisplay';
 import {
   Table,
   TableBody,

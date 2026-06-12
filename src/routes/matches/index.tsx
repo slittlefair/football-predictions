@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useGetMatches } from '@/api/generated';
-import { TeamDisplay } from '@/components/TeamDisplay';
+import { FlagDisplay } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import {
   Table,
@@ -41,7 +41,7 @@ const RouteComponent = () => {
               <TableCell>{match.date}</TableCell>
               <TableCell>{match.round}</TableCell>
               <TableCell className="flex justify-end align-middle">
-                <TeamDisplay displayName={match.homeTeam} />
+                <FlagDisplay displayName={match.homeTeam} />
               </TableCell>
               <TableCell>
                 {match.homeScore !== undefined && match.awayScore !== undefined
@@ -49,7 +49,7 @@ const RouteComponent = () => {
                   : ''}
               </TableCell>
               <TableCell className="flex justify-start align-middle">
-                <TeamDisplay displayName={match.awayTeam} flagPosition="left" />
+                <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
               </TableCell>
               <TableCell>
                 <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
