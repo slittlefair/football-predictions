@@ -16,7 +16,6 @@ type Tournament struct {
 	Matches      []*Match
 	Participants []*Participant
 	Placements   *CompPlacements
-	Completed    bool
 }
 
 type Match struct {
@@ -32,8 +31,8 @@ type Match struct {
 
 type Prediction struct {
 	ID        int  `csv:"Match Number"`
-	HomeScore *int `csv:"Home Score"`
-	AwayScore *int `csv:"Away Score"`
+	HomeScore *int `csv:"Home Score,omitempty"`
+	AwayScore *int `csv:"Away Score,omitempty"`
 	Points    int
 	Joker     bool `csv:"Joker"`
 }
@@ -53,7 +52,7 @@ type CompPrediction struct {
 
 type Participant struct {
 	Name           string
-	Predictions    map[int]*Prediction
+	Predictions    []*Prediction
 	CompPrediction *CompPrediction
 	TotalPoints    int
 }
@@ -86,8 +85,6 @@ func loadMatches() map[int]*Match {
 }
 
 func main() {
-	now := time.Now()
-
 	tournament := &Tournament{}
 
 	matchLookup := loadMatches()
@@ -113,36 +110,32 @@ func main() {
 		}
 		defer func() { _ = partIn.Close() }()
 
-		part := &Participant{Name: cp.Participant, Predictions: map[int]*Prediction{}, CompPrediction: cp}
+		part := &Participant{Name: cp.Participant, CompPrediction: cp}
 		predictions := []*Prediction{}
 		if err := gocsv.UnmarshalFile(partIn, &predictions); err != nil {
 			panic(fmt.Errorf("loading %s: %w", cp.Participant, err))
 		}
-		for _, p := range predictions {
-			part.Predictions[p.ID] = p
-			match, ok := matchLookup[p.ID]
-			if !ok {
-				panic(fmt.Errorf("match not found: %v", p.ID))
-			}
-			score := p.scoreMatch(match, now)
-			if p.Joker {
-				score *= 2
-			}
-			p.Points = score
-			part.TotalPoints += score
-		}
+		// for _, p := range predictions {
+		// 	part.Predictions[p.ID] = p
+		// 	match, ok := matchLookup[p.ID]
+		// 	if !ok {
+		// 		panic(fmt.Errorf("match not found: %v", p.ID))
+		// 	}
+		// 	score := p.scoreMatch(match, now)
+		// 	if p.Joker {
+		// 		score *= 2
+		// 	}
+		// 	p.Points = score
+		// 	part.TotalPoints += score
+		// }
 
-		participantsLookup[part.Name] = part
-	}
-
-	completed := true
-	for _, m := range matchLookup {
-		tournament.Matches = append(tournament.Matches, m)
-		if completed && now.Before(m.Date.Add(time.Hour*2)) {
-			completed = false
+		participantsLookup[part.Name] = &Participant{
+			Name:           cp.Participant,
+			CompPrediction: cp,
+			Predictions:    predictions,
 		}
 	}
-	tournament.Completed = completed
+
 	for _, p := range participantsLookup {
 		tournament.Participants = append(tournament.Participants, p)
 	}
@@ -150,7 +143,7 @@ func main() {
 	tournament.scoreTournament()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/leaderboard", leaderboardHandler(participantsLookup))
+	mux.HandleFunc("/api/leaderboard", leaderboardHandler(participantsLookup, matchLookup))
 	mux.HandleFunc("/api/matches", matchesHandler(matchLookup))
 	mux.HandleFunc("/api/matches/{id}", matchHandler(matchLookup, participantsLookup))
 	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup))
@@ -165,25 +158,17 @@ func main() {
 	}
 }
 
-func (p *Prediction) scoreMatch(m *Match, now time.Time) int {
-	if !m.isValidMatch(now) {
-		return 0
+func (p *Prediction) scoreMatch(m *Match) (int, bool) {
+	if m.HomeScore == nil || m.AwayScore == nil {
+		return 0, false
 	}
 	if p.correctScore(m) {
-		return correctScore
+		return correctScore, true
 	}
 	if p.correctResult(m) {
-		return correctResult
+		return correctResult, false
 	}
-	return 0
-}
-
-func (m *Match) isValidMatch(t time.Time) bool {
-	// Match is not valid if it won't have finished yet
-	if m.Date.After(t.Add(time.Hour * 3)) {
-		return false
-	}
-	return m.HomeScore != nil && m.AwayScore != nil
+	return 0, false
 }
 
 func (p *Prediction) correctScore(m *Match) bool {
@@ -226,6 +211,9 @@ func (cp *CompPlacements) top4() []string {
 }
 
 func scoreTeam(i int, guess, actual []string) int {
+	if actual[i] == "" {
+		return 0
+	}
 	if guess[i] == actual[i] {
 		return correctPlacement
 	}
@@ -236,10 +224,6 @@ func scoreTeam(i int, guess, actual []string) int {
 }
 
 func (t *Tournament) scoreTournament() {
-	if !t.Completed {
-		return
-	}
-
 	tournResIn, err := os.Open("data/tournament_results.csv")
 	if err != nil {
 		panic(err)
@@ -251,12 +235,15 @@ func (t *Tournament) scoreTournament() {
 		panic(err)
 	}
 
+	if len(results) == 0 {
+		return
+	}
+
 	if len(results) != 1 {
 		panic("expected exactly one tournament results row")
 	}
 
 	tournamentResults := results[0]
-	t.Placements = tournamentResults
 	actual := tournamentResults.top4()
 
 	for _, p := range t.Participants {

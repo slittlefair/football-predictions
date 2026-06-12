@@ -1,6 +1,9 @@
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { getLeaderboard } from '@/api';
+import classNames from 'classnames';
+import { useGetLeaderboard } from '@/api/generated';
 import {
   Table,
   TableBody,
@@ -13,10 +16,13 @@ import {
 const queryClient = new QueryClient();
 
 const LeaderBoard = () => {
-  const query = useQuery({
-    queryKey: ['leaderboard'],
-    queryFn: getLeaderboard,
-  });
+  const { data } = useGetLeaderboard();
+
+  if (!data?.data) {
+    return null;
+  }
+
+  const leaderboard = data.data;
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
@@ -25,8 +31,8 @@ const LeaderBoard = () => {
       </h1>
       {/* <h1 >World Cup Predictor</h1> */}
 
-      <h3 className="display-title">Leaderboard</h3>
-      <Table className="w-2xl">
+      <h3 className="display-title font-bold">Leaderboard</h3>
+      <Table className="w-72">
         <TableHeader>
           <TableRow>
             <TableHead />
@@ -35,13 +41,31 @@ const LeaderBoard = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {query.data?.map((p, i) => (
-            <TableRow key={p.name}>
-              <TableCell>{i + 1}</TableCell>
-              <TableCell>{p.name}</TableCell>
-              <TableCell>{p.points}</TableCell>
-            </TableRow>
-          ))}
+          {leaderboard.map(p => {
+            const better = p.position < p.previousPosition;
+            const worse = p.position > p.previousPosition;
+            return (
+              <TableRow
+                key={p.participant}
+                className={classNames({
+                  // 'bg-green-200': better,
+                  // 'bg-green-400': leaderboard[0].totalPoints === p.totalPoints,
+                  // 'bg-red-200': worse,
+                })}
+              >
+                <TableCell>
+                  {p.position}
+                  {better ? (
+                    <FontAwesomeIcon icon={faCaretUp} className="text-green-400" />
+                  ) : worse ? (
+                    <FontAwesomeIcon icon={faCaretDown} className="text-red-400" />
+                  ) : null}
+                </TableCell>
+                <TableCell>{p.participant}</TableCell>
+                <TableCell>{p.totalPoints}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </main>

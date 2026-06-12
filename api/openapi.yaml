@@ -6,6 +6,30 @@ info:
   
 components:
   schemas:
+    Leaderboard:
+      type: object
+      required:
+        - participant
+        - totalPoints
+        - position
+        - previousPosition
+        - correctScores
+      properties:
+        participant:
+          type: string
+
+        totalPoints:
+          type: integer
+
+        position:
+          type: integer
+
+        previousPosition:
+          type: integer
+
+        correctScores:
+          type: integer
+
     Match:
       type: object
       required:
@@ -14,7 +38,6 @@ components:
         - round
         - homeTeam
         - awayTeam
-        - complete
       properties:
         id:
           type: integer
@@ -39,9 +62,6 @@ components:
         awayScore:
           type: integer
           nullable: true
-
-        complete:
-          type: boolean
 
     MatchPredictions:
       type: object
@@ -137,6 +157,20 @@ components:
 
 
 paths:
+  /api/leaderboard:
+    get:
+      operationId: getLeaderboard
+      summary: Get leaderboard
+      responses:
+        "200":
+          description: The leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Leaderboard"
+
   /api/matches:
     get:
       operationId: getMatches

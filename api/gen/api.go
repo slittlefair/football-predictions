@@ -7,11 +7,19 @@ import (
 	"time"
 )
 
+// Leaderboard defines model for Leaderboard.
+type Leaderboard struct {
+	CorrectScores    int    `json:"correctScores"`
+	Participant      string `json:"participant"`
+	Position         int    `json:"position"`
+	PreviousPosition int    `json:"previousPosition"`
+	TotalPoints      int    `json:"totalPoints"`
+}
+
 // Match defines model for Match.
 type Match struct {
 	AwayScore *int      `json:"awayScore,omitempty"`
 	AwayTeam  string    `json:"awayTeam"`
-	Complete  bool      `json:"complete"`
 	Date      time.Time `json:"date"`
 	HomeScore *int      `json:"homeScore,omitempty"`
 	HomeTeam  string    `json:"homeTeam"`

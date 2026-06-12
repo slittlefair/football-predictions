@@ -19,6 +19,14 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
+export interface Leaderboard {
+  participant: string;
+  totalPoints: number;
+  position: number;
+  previousPosition: number;
+  correctScores: number;
+}
+
 export interface Match {
   id: number;
   date: string;
@@ -29,7 +37,6 @@ export interface Match {
   awayTeam: string;
   /** @nullable */
   awayScore?: number | null;
-  complete: boolean;
 }
 
 export interface Prediction {
@@ -61,6 +68,126 @@ export interface Participant {
   tournamentPredictions: TournamentPredictions;
   totalPoints: number;
 }
+
+export type getLeaderboardResponse200 = {
+  data: Leaderboard[]
+  status: 200
+}
+
+export type getLeaderboardResponseSuccess = (getLeaderboardResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getLeaderboardResponse = (getLeaderboardResponseSuccess)
+
+export const getGetLeaderboardUrl = () => {
+
+
+
+
+  return `/api/leaderboard`
+}
+
+/**
+ * @summary Get leaderboard
+ */
+export const getLeaderboard = async ( options?: RequestInit): Promise<getLeaderboardResponse> => {
+
+  const res = await fetch(getGetLeaderboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getLeaderboardResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getLeaderboardResponse
+}
+
+
+
+
+
+export const getGetLeaderboardQueryKey = () => {
+    return [
+    `/api/leaderboard`
+    ] as const;
+    }
+
+
+export const getGetLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeaderboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaderboard>>> = ({ signal }) => getLeaderboard({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getLeaderboard>>>
+export type GetLeaderboardQueryError = unknown
+
+
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getLeaderboard>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getLeaderboard>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get leaderboard
+ */
+
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLeaderboardQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export type getMatchesResponse200 = {
   data: Match[]

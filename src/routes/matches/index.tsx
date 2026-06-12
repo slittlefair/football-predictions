@@ -43,7 +43,9 @@ const RouteComponent = () => {
               <TableCell>{match.round}</TableCell>
               <TableCell>{match.homeTeam}</TableCell>
               <TableCell>
-                {match.complete ? `${match.homeScore} - ${match.awayScore}` : ''}
+                {match.homeScore !== undefined && match.awayScore !== undefined
+                  ? `${match.homeScore} - ${match.awayScore}`
+                  : ''}
               </TableCell>
               <TableCell>{match.awayTeam}</TableCell>
               <TableCell>

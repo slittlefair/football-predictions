@@ -10,23 +10,57 @@ import (
 )
 
 type LeaderboardEntry struct {
-	Name             string `json:"name"`
-	Points           int    `json:"points"`
-	PreviousPosition int    `json:"previous_position"`
+	Name           string `json:"name"`
+	Points         int    `json:"points"`
+	PreviousPoints int
+	CorrectScores  int
 }
 
-func leaderboardHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
+func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
 	return func(
 		w http.ResponseWriter,
-		_ *http.Request,
+		r *http.Request,
 	) {
+		now := time.Now()
+		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
 		entries := make([]LeaderboardEntry, 0, len(participantsLookup))
 
 		for _, p := range participantsLookup {
-			entries = append(entries, LeaderboardEntry{
-				Name:   p.Name,
-				Points: p.TotalPoints,
-			})
+			entry := LeaderboardEntry{Name: p.Name}
+			for _, pred := range p.Predictions {
+				match, ok := matchLookup[pred.ID]
+				if !ok {
+					http.NotFound(w, r)
+					return
+				}
+
+				score, wasCorrect := pred.scoreMatch(match)
+				entry.Points += score
+				if !match.Date.Before(startOfToday) {
+					continue
+				}
+				entry.PreviousPoints += score
+				if wasCorrect {
+					entry.CorrectScores++
+				}
+			}
+			entries = append(entries, entry)
+		}
+
+		sort.Slice(entries, func(i, j int) bool {
+			if entries[i].PreviousPoints == entries[j].PreviousPoints {
+				if entries[i].CorrectScores == entries[j].CorrectScores {
+					return entries[i].Name < entries[j].Name
+				}
+				return entries[i].CorrectScores == entries[j].CorrectScores
+			}
+			return entries[i].Points > entries[j].Points
+		})
+
+		prevPositions := map[string]int{}
+		for i, v := range entries {
+			prevPositions[v.Name] = i + 1
 		}
 
 		sort.Slice(entries, func(i, j int) bool {
@@ -36,10 +70,22 @@ func leaderboardHandler(participantsLookup map[string]*Participant) http.Handler
 			return entries[i].Points > entries[j].Points
 		})
 
+		leaderboard := []gen.Leaderboard{}
+
+		for i, v := range entries {
+			leaderboard = append(leaderboard, gen.Leaderboard{
+				Participant:      v.Name,
+				CorrectScores:    v.CorrectScores,
+				Position:         i + 1,
+				TotalPoints:      v.Points,
+				PreviousPosition: prevPositions[v.Name],
+			})
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		if err := json.NewEncoder(w).Encode(entries); err != nil {
+		if err := json.NewEncoder(w).Encode(leaderboard); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -47,12 +93,10 @@ func leaderboardHandler(participantsLookup map[string]*Participant) http.Handler
 
 func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		now := time.Now()
-
 		entries := make([]gen.Match, 0, len(matchLookup))
 
 		for _, m := range matchLookup {
-			entry := convertMatchToEntry(m, now)
+			entry := convertMatchToEntry(m)
 			entries = append(entries, entry)
 		}
 		sort.Slice(entries, func(i, j int) bool {
@@ -68,14 +112,9 @@ func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
 	}
 }
 
-func convertMatchToEntry(match *Match, now time.Time) gen.Match {
-	complete := now.After(match.Date.Add(time.Hour * 2))
+func convertMatchToEntry(match *Match) gen.Match {
 	homeScore := match.HomeScore
 	awayScore := match.AwayScore
-	if !complete {
-		homeScore = nil
-		awayScore = nil
-	}
 
 	round := match.Round
 	if match.Round == "1" && match.Group != "" {
@@ -90,13 +129,11 @@ func convertMatchToEntry(match *Match, now time.Time) gen.Match {
 		HomeScore: homeScore,
 		AwayTeam:  match.Away,
 		AwayScore: awayScore,
-		Complete:  complete,
 	}
 }
 
 func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Participant) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		now := time.Now()
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
@@ -110,7 +147,7 @@ func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Par
 			return
 		}
 
-		entry := convertMatchToEntry(match, now)
+		entry := convertMatchToEntry(match)
 
 		matchPredictions := gen.MatchPredictions{
 			Id:    match.ID,
@@ -120,13 +157,15 @@ func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Par
 		for _, p := range participantsLookup {
 			for _, pred := range p.Predictions {
 				if pred.ID == match.ID {
+					points, _ := pred.scoreMatch(match)
 					matchPredictions.Predictions = append(matchPredictions.Predictions, gen.Prediction{
 						HomeScore:   pred.HomeScore,
 						AwayScore:   pred.AwayScore,
 						UsedJoker:   &pred.Joker,
 						Participant: p.Name,
-						Points:      pred.Points,
+						Points:      points,
 					})
+					break
 				}
 			}
 		}
