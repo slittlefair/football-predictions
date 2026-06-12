@@ -110,26 +110,12 @@ func main() {
 		}
 		defer func() { _ = partIn.Close() }()
 
-		part := &Participant{Name: cp.Participant, CompPrediction: cp}
 		predictions := []*Prediction{}
 		if err := gocsv.UnmarshalFile(partIn, &predictions); err != nil {
 			panic(fmt.Errorf("loading %s: %w", cp.Participant, err))
 		}
-		// for _, p := range predictions {
-		// 	part.Predictions[p.ID] = p
-		// 	match, ok := matchLookup[p.ID]
-		// 	if !ok {
-		// 		panic(fmt.Errorf("match not found: %v", p.ID))
-		// 	}
-		// 	score := p.scoreMatch(match, now)
-		// 	if p.Joker {
-		// 		score *= 2
-		// 	}
-		// 	p.Points = score
-		// 	part.TotalPoints += score
-		// }
 
-		participantsLookup[part.Name] = &Participant{
+		participantsLookup[cp.Participant] = &Participant{
 			Name:           cp.Participant,
 			CompPrediction: cp,
 			Predictions:    predictions,
@@ -146,8 +132,8 @@ func main() {
 	mux.HandleFunc("/api/leaderboard", leaderboardHandler(participantsLookup, matchLookup))
 	mux.HandleFunc("/api/matches", matchesHandler(matchLookup))
 	mux.HandleFunc("/api/matches/{id}", matchHandler(matchLookup, participantsLookup))
-	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup))
-	mux.HandleFunc("/api/participants/{name}", participantHandler(participantsLookup))
+	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup, matchLookup))
+	mux.HandleFunc("/api/participants/{name}", participantHandler(participantsLookup, matchLookup))
 	mux.HandleFunc("/api/tournament", tournamentHandler(participantsLookup))
 
 	fmt.Println("Listening on http://localhost:8080")
@@ -159,6 +145,14 @@ func main() {
 }
 
 func (p *Prediction) scoreMatch(m *Match) (int, bool) {
+	points, correct := p.calculatePoints(m)
+	if p.Joker {
+		points *= 2
+	}
+	return points, correct
+}
+
+func (p *Prediction) calculatePoints(m *Match) (int, bool) {
 	if m.HomeScore == nil || m.AwayScore == nil {
 		return 0, false
 	}

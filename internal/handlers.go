@@ -179,7 +179,7 @@ func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Par
 	}
 }
 
-func participantHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
+func participantHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("name")
 
@@ -192,25 +192,31 @@ func participantHandler(participantsLookup map[string]*Participant) http.Handler
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		if err := json.NewEncoder(w).Encode(mapParticipant(part)); err != nil {
+		if err := json.NewEncoder(w).Encode(mapParticipant(part, matchLookup)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
 
-func mapPrediction(p *Prediction) gen.Prediction {
+func mapPrediction(p *Prediction, m *Match) gen.Prediction {
+	points, _ := p.scoreMatch(m)
 	return gen.Prediction{
 		Id:        p.ID,
 		HomeScore: p.HomeScore,
 		AwayScore: p.AwayScore,
 		UsedJoker: &p.Joker,
+		Points:    points,
 	}
 }
 
-func mapParticipant(p *Participant) gen.Participant {
+func mapParticipant(p *Participant, matchLookup map[int]*Match) gen.Participant {
 	predictions := make([]gen.Prediction, 0, len(p.Predictions))
 	for _, p := range p.Predictions {
-		predictions = append(predictions, mapPrediction(p))
+		m, ok := matchLookup[p.ID]
+		if !ok {
+			continue
+		}
+		predictions = append(predictions, mapPrediction(p, m))
 	}
 
 	sort.Slice(predictions, func(i, j int) bool {
@@ -231,11 +237,11 @@ func mapParticipant(p *Participant) gen.Participant {
 	}
 }
 
-func participantsHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
+func participantsHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		participants := make([]gen.Participant, 0, len(participantsLookup))
 		for _, v := range participantsLookup {
-			participants = append(participants, mapParticipant(v))
+			participants = append(participants, mapParticipant(v, matchLookup))
 		}
 
 		sort.Slice(participants, func(i, j int) bool {

@@ -1,6 +1,7 @@
-import { Button as ButtonPrimitive } from '@base-ui/react/button';
+import { Button as ButtonPrimitive, type ButtonProps } from '@base-ui/react/button';
+import { createLink } from '@tanstack/react-router';
 import { cva, type VariantProps } from 'class-variance-authority';
-
+import { forwardRef } from 'react';
 import { cn } from '@/lib/utils.ts';
 
 const buttonVariants = cva(
@@ -53,4 +54,10 @@ function Button({
   );
 }
 
-export { Button, buttonVariants };
+const RouterButton = createLink(
+  forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
+    return <Button ref={ref} {...props} />;
+  }),
+);
+
+export { Button, buttonVariants, RouterButton };

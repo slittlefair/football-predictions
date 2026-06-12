@@ -1,8 +1,6 @@
-import type { ButtonProps } from '@base-ui/react/button';
-import { createFileRoute, createLink } from '@tanstack/react-router';
-import { forwardRef } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
 import { useGetMatches } from '@/api/generated';
-import { Button } from '@/components/ui/button';
+import { RouterButton } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -49,7 +47,6 @@ const RouteComponent = () => {
               </TableCell>
               <TableCell>{match.awayTeam}</TableCell>
               <TableCell>
-                {/* TODO make individual match pages */}
                 <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
                   View
                 </RouterButton>
@@ -61,13 +58,6 @@ const RouteComponent = () => {
     </Table>
   );
 };
-
-// TODO move this into own component
-const RouterButton = createLink(
-  forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
-    return <Button ref={ref} {...props} />;
-  }),
-);
 
 export const Route = createFileRoute('/matches/')({
   component: RouteComponent,
