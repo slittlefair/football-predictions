@@ -2,7 +2,6 @@ import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import classNames from 'classnames';
 import { useGetLeaderboard } from '@/api/generated';
 import {
   Table,
@@ -32,11 +31,13 @@ const LeaderBoard = () => {
       {/* <h1 >World Cup Predictor</h1> */}
 
       <h3 className="display-title font-bold">Leaderboard</h3>
-      <Table className="w-72">
+      <Table className="w-3/5">
         <TableHeader>
           <TableRow>
             <TableHead />
             <TableHead />
+            <TableHead>P</TableHead>
+            <TableHead>CS</TableHead>
             <TableHead>Points</TableHead>
           </TableRow>
         </TableHeader>
@@ -45,24 +46,19 @@ const LeaderBoard = () => {
             const better = p.position < p.previousPosition;
             const worse = p.position > p.previousPosition;
             return (
-              <TableRow
-                key={p.participant}
-                className={classNames({
-                  // 'bg-green-200': better,
-                  // 'bg-green-400': leaderboard[0].totalPoints === p.totalPoints,
-                  // 'bg-red-200': worse,
-                })}
-              >
+              <TableRow key={p.participant}>
                 <TableCell>
                   {p.position}
                   {better ? (
-                    <FontAwesomeIcon icon={faCaretUp} className="text-green-400" />
+                    <FontAwesomeIcon icon={faCaretUp} className="ml-1 text-green-400" />
                   ) : worse ? (
-                    <FontAwesomeIcon icon={faCaretDown} className="text-red-400" />
+                    <FontAwesomeIcon icon={faCaretDown} className="ml-1 text-red-400" />
                   ) : null}
                 </TableCell>
                 <TableCell>{p.participant}</TableCell>
-                <TableCell>{p.totalPoints}</TableCell>
+                <TableCell>{p.played}</TableCell>
+                <TableCell>{p.correctScores}</TableCell>
+                <TableCell className="font-bold text-lg">{p.totalPoints}</TableCell>
               </TableRow>
             );
           })}

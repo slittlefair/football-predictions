@@ -45,10 +45,10 @@ function RouteComponent() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 flex flex-col items-center">
       <h4 className="pb-3 font-bold flex gap-2">{display}</h4>
 
-      <Table className="w-52">
+      <Table className="w-52 m-auto">
         <TableBody>
           {sortedPredictions.map(p => {
             const state = !haveScore

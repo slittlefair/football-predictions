@@ -40,7 +40,7 @@ const RouteComponent = () => {
             <TableRow key={match.id}>
               <TableCell>{match.date}</TableCell>
               <TableCell>{match.round}</TableCell>
-              <TableCell className="flex justify-end align-middle">
+              <TableCell className="flex justify-end items-center">
                 <TeamDisplay displayName={match.homeTeam} />
               </TableCell>
               <TableCell>
@@ -48,7 +48,7 @@ const RouteComponent = () => {
                   ? `${match.homeScore} - ${match.awayScore}`
                   : ''}
               </TableCell>
-              <TableCell className="flex justify-start align-middle">
+              <TableCell className="flex justify-start items-center">
                 <TeamDisplay displayName={match.awayTeam} flagPosition="left" />
               </TableCell>
               <TableCell>
