@@ -13,9 +13,17 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
+func (t Tournament) matchLookup() map[int]*Match {
+	matchLookup := map[int]*Match{}
+	for _, m := range t.Matches {
+		matchLookup[m.ID] = m
+	}
+	return matchLookup
+}
+
 type PointsTallier struct {
-	Name          string `json:"name"`
-	Points        int    `json:"points"`
+	Name          string
+	Points        int
 	CorrectScores int
 }
 
@@ -32,7 +40,7 @@ func sortPointsTallier(a, b *PointsTallier) int {
 	return b.Points - a.Points
 }
 
-func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
+func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 	return func(
 		w http.ResponseWriter,
 		r *http.Request,
@@ -40,10 +48,12 @@ func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup 
 		now := time.Now()
 		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
-		currentPoints := make([]*PointsTallier, 0, len(participantsLookup))
-		previousPoints := make([]*PointsTallier, 0, len(participantsLookup))
+		currentPoints := make([]*PointsTallier, 0, len(t.Participants))
+		previousPoints := make([]*PointsTallier, 0, len(t.Participants))
 
-		for _, p := range participantsLookup {
+		matchLookup := t.matchLookup()
+
+		for _, p := range t.Participants {
 			curr := &PointsTallier{Name: p.Name}
 			prev := &PointsTallier{Name: p.Name}
 			for _, pred := range p.Predictions {
@@ -99,11 +109,11 @@ func leaderboardHandler(participantsLookup map[string]*Participant, matchLookup 
 	}
 }
 
-func matchesHandler(matchLookup map[int]*Match) http.HandlerFunc {
+func (t Tournament) matchesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		entries := make([]gen.Match, 0, len(matchLookup))
+		entries := make([]gen.Match, 0, len(t.Matches))
 
-		for _, m := range matchLookup {
+		for _, m := range t.Matches {
 			entry := convertMatchToEntry(m)
 			entries = append(entries, entry)
 		}
@@ -125,7 +135,7 @@ func convertMatchToEntry(match *Match) gen.Match {
 	awayScore := match.AwayScore
 
 	round := match.Round
-	if match.Round == "1" && match.Group != "" {
+	if slices.Contains([]string{"1", "2", "3"}, match.Round) && match.Group != "" {
 		round = match.Group
 	}
 
@@ -140,7 +150,7 @@ func convertMatchToEntry(match *Match) gen.Match {
 	}
 }
 
-func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Participant) http.HandlerFunc {
+func (t Tournament) matchHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -149,11 +159,13 @@ func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Par
 			return
 		}
 
-		match, ok := matchLookup[id]
-		if !ok {
+		matchIdx := slices.IndexFunc(t.Matches, func(m *Match) bool { return m.ID == id })
+		if matchIdx == -1 {
 			http.NotFound(w, r)
 			return
 		}
+
+		match := t.Matches[matchIdx]
 
 		entry := convertMatchToEntry(match)
 
@@ -162,7 +174,7 @@ func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Par
 			Match: entry,
 		}
 
-		for _, p := range participantsLookup {
+		for _, p := range t.Participants {
 			for _, pred := range p.Predictions {
 				if pred.ID == match.ID {
 					points, _ := pred.scoreMatch(match)
@@ -187,20 +199,21 @@ func matchHandler(matchLookup map[int]*Match, participantsLookup map[string]*Par
 	}
 }
 
-func participantHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
+func (t Tournament) participantHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("name")
+		name := r.PathValue("name")
 
-		part, ok := participantsLookup[id]
-		if !ok {
+		pIdx := slices.IndexFunc(t.Participants, func(m *Participant) bool { return m.Name == name })
+		if pIdx == -1 {
 			http.NotFound(w, r)
 			return
 		}
+		participant := t.Participants[pIdx]
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		if err := json.NewEncoder(w).Encode(mapParticipant(part, matchLookup)); err != nil {
+		if err := json.NewEncoder(w).Encode(t.mapParticipant(participant)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -217,8 +230,10 @@ func mapPrediction(p *Prediction, m *Match) gen.Prediction {
 	}
 }
 
-func mapParticipant(p *Participant, matchLookup map[int]*Match) gen.Participant {
+func (t Tournament) mapParticipant(p *Participant) gen.Participant {
 	predictions := make([]gen.Prediction, 0, len(p.Predictions))
+	matchLookup := t.matchLookup()
+
 	for _, p := range p.Predictions {
 		m, ok := matchLookup[p.ID]
 		if !ok {
@@ -246,11 +261,11 @@ func mapParticipant(p *Participant, matchLookup map[int]*Match) gen.Participant 
 	}
 }
 
-func participantsHandler(participantsLookup map[string]*Participant, matchLookup map[int]*Match) http.HandlerFunc {
+func (t Tournament) participantsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		participants := make([]gen.Participant, 0, len(participantsLookup))
-		for _, v := range participantsLookup {
-			participants = append(participants, mapParticipant(v, matchLookup))
+		participants := make([]gen.Participant, 0, len(t.Participants))
+		for _, v := range t.Participants {
+			participants = append(participants, t.mapParticipant(v))
 		}
 
 		sort.Slice(participants, func(i, j int) bool {
@@ -266,12 +281,12 @@ func participantsHandler(participantsLookup map[string]*Participant, matchLookup
 	}
 }
 
-func tournamentHandler(participantsLookup map[string]*Participant) http.HandlerFunc {
+func (t Tournament) tournamentHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		tournamentPredictions := map[string]*CompPrediction{}
+		tournamentPredictions := map[string]*TournamentPrediction{}
 
-		for k, v := range participantsLookup {
-			tournamentPredictions[k] = v.CompPrediction
+		for _, v := range t.Participants {
+			tournamentPredictions[v.Name] = v.CompPrediction
 		}
 
 		w.Header().Set("Content-Type", "application/json")
