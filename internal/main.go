@@ -15,7 +15,6 @@ import (
 type Tournament struct {
 	Matches      []*Match
 	Participants []*Participant
-	Placements   *CompPlacements
 }
 
 type Match struct {
@@ -45,7 +44,7 @@ type CompPlacements struct {
 	TopScorer   string `csv:"Top Scorer"`
 }
 
-type CompPrediction struct {
+type TournamentPrediction struct {
 	Participant string `csv:"Participant"`
 	CompPlacements
 }
@@ -53,7 +52,7 @@ type CompPrediction struct {
 type Participant struct {
 	Name           string
 	Predictions    []*Prediction
-	CompPrediction *CompPrediction
+	CompPrediction *TournamentPrediction
 	TotalPoints    int
 }
 
@@ -63,7 +62,7 @@ const correctResult = 1
 const correctPlacement = 5
 const incorrectPlacement = 2
 
-func loadMatches() map[int]*Match {
+func loadMatches() []*Match {
 	resIn, err := os.Open("data/score_results.csv")
 	if err != nil {
 		panic(err)
@@ -76,72 +75,7 @@ func loadMatches() map[int]*Match {
 		panic(err)
 	}
 
-	matchLookup := make(map[int]*Match, len(matches))
-	for _, v := range matches {
-		matchLookup[v.ID] = v
-	}
-
-	return matchLookup
-}
-
-func main() {
-	tournament := &Tournament{}
-
-	matchLookup := loadMatches()
-
-	compPredictions := []*CompPrediction{}
-
-	tournyIn, err := os.Open("data/predictions/Tournament.csv")
-	if err != nil {
-		panic(err)
-	}
-	defer func() { _ = tournyIn.Close() }()
-
-	if err := gocsv.UnmarshalFile(tournyIn, &compPredictions); err != nil {
-		panic(err)
-	}
-
-	participantsLookup := make(map[string]*Participant)
-
-	for _, cp := range compPredictions {
-		partIn, err := os.Open(fmt.Sprintf("data/predictions/%s.csv", cp.Participant))
-		if err != nil {
-			panic(err)
-		}
-		defer func() { _ = partIn.Close() }()
-
-		predictions := []*Prediction{}
-		if err := gocsv.UnmarshalFile(partIn, &predictions); err != nil {
-			panic(fmt.Errorf("loading %s: %w", cp.Participant, err))
-		}
-
-		participantsLookup[cp.Participant] = &Participant{
-			Name:           cp.Participant,
-			CompPrediction: cp,
-			Predictions:    predictions,
-		}
-	}
-
-	for _, p := range participantsLookup {
-		tournament.Participants = append(tournament.Participants, p)
-	}
-
-	tournament.scoreTournament()
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/leaderboard", leaderboardHandler(participantsLookup, matchLookup))
-	mux.HandleFunc("/api/matches", matchesHandler(matchLookup))
-	mux.HandleFunc("/api/matches/{id}", matchHandler(matchLookup, participantsLookup))
-	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup, matchLookup))
-	mux.HandleFunc("/api/participants/{name}", participantHandler(participantsLookup, matchLookup))
-	mux.HandleFunc("/api/tournament", tournamentHandler(participantsLookup))
-
-	fmt.Println("Listening on http://localhost:8080")
-
-	err = http.ListenAndServe(":8080", mux)
-	if err != nil {
-		panic(err)
-	}
+	return matches
 }
 
 func (p *Prediction) scoreMatch(m *Match) (int, bool) {
@@ -248,5 +182,59 @@ func (t *Tournament) scoreTournament() {
 		for i := range guess {
 			p.TotalPoints += scoreTeam(i, guess, actual)
 		}
+	}
+}
+
+func main() {
+	tournament := &Tournament{
+		Matches: loadMatches(),
+	}
+
+	tournamentPredicions := []*TournamentPrediction{}
+
+	tIn, err := os.Open("data/predictions/Tournament.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = tIn.Close() }()
+
+	if err := gocsv.UnmarshalFile(tIn, &tournamentPredicions); err != nil {
+		panic(err)
+	}
+
+	for _, cp := range tournamentPredicions {
+		partIn, err := os.Open(fmt.Sprintf("data/predictions/%s.csv", cp.Participant))
+		if err != nil {
+			panic(err)
+		}
+		defer func() { _ = partIn.Close() }()
+
+		predictions := []*Prediction{}
+		if err := gocsv.UnmarshalFile(partIn, &predictions); err != nil {
+			panic(fmt.Errorf("loading %s: %w", cp.Participant, err))
+		}
+
+		tournament.Participants = append(tournament.Participants, &Participant{
+			Name:           cp.Participant,
+			CompPrediction: cp,
+			Predictions:    predictions,
+		})
+	}
+
+	tournament.scoreTournament()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/leaderboard", tournament.leaderboardHandler())
+	mux.HandleFunc("/api/matches", tournament.matchesHandler())
+	mux.HandleFunc("/api/matches/{id}", tournament.matchHandler())
+	mux.HandleFunc("/api/participants", tournament.participantsHandler())
+	mux.HandleFunc("/api/participants/{name}", tournament.participantHandler())
+	mux.HandleFunc("/api/tournament", tournament.tournamentHandler())
+
+	fmt.Println("Listening on http://localhost:8080")
+
+	err = http.ListenAndServe(":8080", mux)
+	if err != nil {
+		panic(err)
 	}
 }
