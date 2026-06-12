@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useGetParticipants } from '@/api/generated';
-import { TeamDisplay } from '@/components/TeamDisplay';
+import { FlagCell } from '@/components/FlagDisplay';
 import {
   Table,
   TableBody,
@@ -55,11 +55,3 @@ function RouteComponent() {
     </div>
   );
 }
-
-const FlagCell = ({ text, code }: { text: string; code?: string }) => (
-  <TableCell>
-    <div className="flex justify-start">
-      <TeamDisplay displayName={text} teamOverride={code} flagPosition="left" />
-    </div>
-  </TableCell>
-);
