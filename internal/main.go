@@ -38,11 +38,12 @@ type Prediction struct {
 }
 
 type CompPlacements struct {
-	Winner      string `csv:"Winner"`
-	RunnerUp    string `csv:"Runner Up"`
-	ThirdPlace  string `csv:"Third Place"`
-	FourthPlace string `csv:"Fourth Place"`
-	TopScorer   string `csv:"Top Scorer"`
+	Winner            string `csv:"Winner"`
+	RunnerUp          string `csv:"Runner Up"`
+	ThirdPlace        string `csv:"Third Place"`
+	FourthPlace       string `csv:"Fourth Place"`
+	TopScorer         string `csv:"Top Scorer"`
+	ScorerNationality string `csv:"Nationality"`
 }
 
 type CompPrediction struct {
@@ -135,6 +136,7 @@ func main() {
 	mux.HandleFunc("/api/participants", participantsHandler(participantsLookup, matchLookup))
 	mux.HandleFunc("/api/participants/{name}", participantHandler(participantsLookup, matchLookup))
 	mux.HandleFunc("/api/tournament", tournamentHandler(participantsLookup))
+	mux.HandleFunc("/api/teams", teamsHandler())
 
 	fmt.Println("Listening on http://localhost:8080")
 
