@@ -78,27 +78,24 @@ function RouteComponent() {
               {participant.predictions.map(p => {
                 const match = matchesResp.data[p.id - 1];
                 const havePrediction = p.homeScore !== undefined && p.awayScore !== undefined;
-                const haveScore = match.homeScore !== undefined && match.awayScore !== undefined;
                 return (
                   <TableRow
                     key={match.id}
                     className={classNames({
-                      'bg-red-400': haveScore && p.points === 0,
-                      'bg-yellow-400': haveScore && p.points > 0 && p.points < 3,
-                      'bg-emerald-400': haveScore && p.points > 2,
+                      'bg-red-400': match.hasResult && p.points === 0,
+                      'bg-yellow-400': match.hasResult && p.points > 0 && p.points < 3,
+                      'bg-emerald-400': match.hasResult && p.points > 2,
                     })}
                   >
                     <TableCell>{match.date}</TableCell>
                     <TableCell>{match.round}</TableCell>
                     <TableCell>{match.homeTeam}</TableCell>
                     <TableCell>
-                      {match.homeScore !== undefined && match.awayScore !== undefined
-                        ? `${match.homeScore} - ${match.awayScore}`
-                        : ''}
+                      {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : ''}
                     </TableCell>
                     <TableCell>{match.awayTeam}</TableCell>
                     <TableCell>{havePrediction && `${p.homeScore} - ${p.awayScore}`}</TableCell>
-                    <TableCell>{havePrediction && haveScore && p.points}</TableCell>
+                    <TableCell>{havePrediction && match.hasResult && p.points}</TableCell>
                     <TableCell>
                       <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
                         View

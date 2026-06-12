@@ -25,9 +25,6 @@ function RouteComponent() {
     return b.points - a.points;
   });
 
-  // TODO do this server side
-  const haveScore = match.homeScore !== undefined && match.awayScore !== undefined;
-
   const home = <TeamDisplay displayName={match.homeTeam} />;
   const away = <TeamDisplay displayName={match.awayTeam} flagPosition="left" />;
 
@@ -36,7 +33,7 @@ function RouteComponent() {
       {home} v {away}
     </>
   );
-  if (haveScore) {
+  if (match.hasResult) {
     display = (
       <>
         {home} {match.homeScore} - {match.awayScore} {away}
@@ -51,7 +48,7 @@ function RouteComponent() {
       <Table className="w-52 m-auto">
         <TableBody>
           {sortedPredictions.map(p => {
-            const state = !haveScore
+            const state = !match.hasResult
               ? 'none'
               : p.points === 0
                 ? 'red'
@@ -73,7 +70,7 @@ function RouteComponent() {
                     ? `${p.homeScore} - ${p.awayScore}`
                     : '-'}
                 </TableCell>
-                {haveScore && <TableCell>{p.points}</TableCell>}
+                {match.hasResult && <TableCell>{p.points}</TableCell>}
               </TableRow>
             );
           })}

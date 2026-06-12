@@ -44,9 +44,7 @@ const RouteComponent = () => {
                 <TeamDisplay displayName={match.homeTeam} />
               </TableCell>
               <TableCell>
-                {match.homeScore !== undefined && match.awayScore !== undefined
-                  ? `${match.homeScore} - ${match.awayScore}`
-                  : ''}
+                {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : ''}
               </TableCell>
               <TableCell className="flex justify-start items-center">
                 <TeamDisplay displayName={match.awayTeam} flagPosition="left" />
