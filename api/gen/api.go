@@ -11,6 +11,7 @@ import (
 type Leaderboard struct {
 	CorrectScores    int    `json:"correctScores"`
 	Participant      string `json:"participant"`
+	Played           int    `json:"played"`
 	Position         int    `json:"position"`
 	PreviousPosition int    `json:"previousPosition"`
 	TotalPoints      int    `json:"totalPoints"`
@@ -21,6 +22,7 @@ type Match struct {
 	AwayScore *int      `json:"awayScore,omitempty"`
 	AwayTeam  string    `json:"awayTeam"`
 	Date      time.Time `json:"date"`
+	HasResult bool      `json:"hasResult"`
 	HomeScore *int      `json:"homeScore,omitempty"`
 	HomeTeam  string    `json:"homeTeam"`
 	Id        int       `json:"id"`
@@ -45,6 +47,7 @@ type Participant struct {
 // Prediction defines model for Prediction.
 type Prediction struct {
 	AwayScore   *int   `json:"awayScore,omitempty"`
+	HasResult   bool   `json:"hasResult"`
 	HomeScore   *int   `json:"homeScore,omitempty"`
 	Id          int    `json:"id"`
 	Participant string `json:"participant"`

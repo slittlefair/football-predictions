@@ -40,15 +40,13 @@ const RouteComponent = () => {
             <TableRow key={match.id}>
               <TableCell>{match.date}</TableCell>
               <TableCell>{match.round}</TableCell>
-              <TableCell className="flex justify-end align-middle">
+              <TableCell className="flex justify-end items-center">
                 <FlagDisplay displayName={match.homeTeam} />
               </TableCell>
               <TableCell>
-                {match.homeScore !== undefined && match.awayScore !== undefined
-                  ? `${match.homeScore} - ${match.awayScore}`
-                  : ''}
+                {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : ''}
               </TableCell>
-              <TableCell className="flex justify-start align-middle">
+              <TableCell className="flex justify-start items-center">
                 <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
               </TableCell>
               <TableCell>

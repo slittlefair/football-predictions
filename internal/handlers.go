@@ -50,6 +50,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 
 		currentPoints := make([]*PointsTallier, 0, len(t.Participants))
 		previousPoints := make([]*PointsTallier, 0, len(t.Participants))
+		played := map[int]struct{}{}
 
 		matchLookup := t.matchLookup()
 
@@ -61,6 +62,10 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				if !ok {
 					http.NotFound(w, r)
 					return
+				}
+
+				if match.HomeScore != nil && match.AwayScore != nil {
+					played[match.ID] = struct{}{}
 				}
 
 				score, wasCorrect := pred.scoreMatch(match)
@@ -97,6 +102,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				Position:         i + 1,
 				TotalPoints:      v.Points,
 				PreviousPosition: previousPosition + 1,
+				Played:           len(played),
 			})
 		}
 
@@ -147,6 +153,7 @@ func convertMatchToEntry(match *Match) gen.Match {
 		HomeScore: homeScore,
 		AwayTeam:  match.Away,
 		AwayScore: awayScore,
+		HasResult: match.HomeScore != nil && match.AwayScore != nil,
 	}
 }
 
@@ -177,14 +184,10 @@ func (t Tournament) matchHandler() http.HandlerFunc {
 		for _, p := range t.Participants {
 			for _, pred := range p.Predictions {
 				if pred.ID == match.ID {
-					points, _ := pred.scoreMatch(match)
-					matchPredictions.Predictions = append(matchPredictions.Predictions, gen.Prediction{
-						HomeScore:   pred.HomeScore,
-						AwayScore:   pred.AwayScore,
-						UsedJoker:   &pred.Joker,
-						Participant: p.Name,
-						Points:      points,
-					})
+					matchPredictions.Predictions = append(
+						matchPredictions.Predictions,
+						mapPrediction(p.Name, pred, match),
+					)
 					break
 				}
 			}
@@ -219,14 +222,16 @@ func (t Tournament) participantHandler() http.HandlerFunc {
 	}
 }
 
-func mapPrediction(p *Prediction, m *Match) gen.Prediction {
+func mapPrediction(name string, p *Prediction, m *Match) gen.Prediction {
 	points, _ := p.scoreMatch(m)
 	return gen.Prediction{
-		Id:        p.ID,
-		HomeScore: p.HomeScore,
-		AwayScore: p.AwayScore,
-		UsedJoker: &p.Joker,
-		Points:    points,
+		Id:          p.ID,
+		HomeScore:   p.HomeScore,
+		AwayScore:   p.AwayScore,
+		UsedJoker:   &p.Joker,
+		Points:      points,
+		HasResult:   m.HomeScore != nil && m.AwayScore != nil,
+		Participant: name,
 	}
 }
 
@@ -234,12 +239,12 @@ func (t Tournament) mapParticipant(p *Participant) gen.Participant {
 	predictions := make([]gen.Prediction, 0, len(p.Predictions))
 	matchLookup := t.matchLookup()
 
-	for _, p := range p.Predictions {
-		m, ok := matchLookup[p.ID]
+	for _, pr := range p.Predictions {
+		m, ok := matchLookup[pr.ID]
 		if !ok {
 			continue
 		}
-		predictions = append(predictions, mapPrediction(p, m))
+		predictions = append(predictions, mapPrediction(p.Name, pr, m))
 	}
 
 	sort.Slice(predictions, func(i, j int) bool {
