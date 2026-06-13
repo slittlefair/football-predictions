@@ -23,7 +23,7 @@ const RouteComponent = () => {
   }
 
   return (
-    <Table className="w-5xl">
+    <Table className="w-xl">
       <TableHeader>
         <TableRow>
           <TableHead>Date</TableHead>
