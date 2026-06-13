@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { useGetMatch } from '@/api/generated';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { formatDate } from '@/utils/date';
 
 export const Route = createFileRoute('/matches/$id')({
   component: RouteComponent,
@@ -27,10 +28,11 @@ function RouteComponent() {
 
   const home = <FlagDisplay displayName={match.homeTeam} />;
   const away = <FlagDisplay displayName={match.awayTeam} flagPosition="left" />;
+  const { date, time } = formatDate(match.date);
 
   let display = (
     <>
-      {home} v {away}
+      {home} {time} {away}
     </>
   );
   if (match.hasResult) {
@@ -47,6 +49,9 @@ function RouteComponent() {
 
   return (
     <div className="p-6 flex flex-col items-center">
+      <h3>
+        {date} | {match.round}
+      </h3>
       <h4 className="pb-3 font-bold flex gap-2 items-center">{display}</h4>
 
       <Table className="w-52 m-auto">
