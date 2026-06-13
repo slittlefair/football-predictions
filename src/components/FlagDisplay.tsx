@@ -26,12 +26,13 @@ export const FlagDisplay = ({
   return (
     <div className={`flex gap-2 items-center ${flagPosition === 'left' && 'flex-row-reverse'}`}>
       {displayName}{' '}
-      <img
-        className="border shadow"
-        src={`https://flagcdn.com/${team.code.toLowerCase()}.svg`}
-        alt={displayName}
-        width={40}
-      />
+      <div className="h-6 w-9 overflow-hidden border shadow">
+        <img
+          className="h-full w-full object-cover"
+          src={`https://flagcdn.com/${team.code.toLowerCase()}.svg`}
+          alt={displayName}
+        />
+      </div>
     </div>
   );
 };

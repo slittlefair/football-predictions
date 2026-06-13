@@ -36,14 +36,18 @@ function RouteComponent() {
   if (match.hasResult) {
     display = (
       <>
-        {home} {match.homeScore} - {match.awayScore} {away}
+        {home}{' '}
+        <p className="font-bold text-xl">
+          {match.homeScore} - {match.awayScore}
+        </p>{' '}
+        {away}
       </>
     );
   }
 
   return (
     <div className="p-6 flex flex-col items-center">
-      <h4 className="pb-3 font-bold flex gap-2">{display}</h4>
+      <h4 className="pb-3 font-bold flex gap-2 items-center">{display}</h4>
 
       <Table className="w-52 m-auto">
         <TableBody>
