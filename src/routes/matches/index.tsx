@@ -1,15 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useGetMatches } from '@/api/generated';
+import { type Match, useGetMatches } from '@/api/generated';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { formatDate } from '@/utils/date';
 
 const RouteComponent = () => {
   const { data, isLoading, error } = useGetMatches();
@@ -22,44 +16,62 @@ const RouteComponent = () => {
     return <p>Loading...</p>;
   }
 
-  return (
-    <Table className="w-xl">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Date</TableHead>
-          <TableHead>Round</TableHead>
-          <TableHead>Home</TableHead>
-          <TableHead>Score</TableHead>
-          <TableHead>Away</TableHead>
-          <TableHead />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.data.map(match => {
-          return (
-            <TableRow key={match.id}>
-              <TableCell>{match.date}</TableCell>
-              <TableCell>{match.round}</TableCell>
-              <TableCell className="flex justify-end items-center">
-                <FlagDisplay displayName={match.homeTeam} />
-              </TableCell>
-              <TableCell>
-                {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : ''}
-              </TableCell>
-              <TableCell className="flex justify-start items-center">
-                <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
-              </TableCell>
-              <TableCell>
-                <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
-                  View
-                </RouterButton>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
+  let currentDateString = '';
+  let matchBucket: Match[] = [];
+  const matchSections = data.data.reduce<Match[][]>((acc, m) => {
+    const { date } = formatDate(m.date);
+    if (date === currentDateString) {
+      matchBucket.push(m);
+      return acc;
+    }
+    if (matchBucket.length > 0) {
+      acc.push(matchBucket);
+    }
+    matchBucket = [m];
+    currentDateString = date;
+    return acc;
+  }, []);
+
+  return matchSections.map(sec => {
+    const { date } = formatDate(sec[0].date);
+    return (
+      <div key={date}>
+        <h3>{date}</h3>
+        <Table className="w-xl">
+          <TableBody>
+            {sec.map(match => {
+              const { time } = formatDate(match.date);
+              return (
+                <TableRow key={match.id}>
+                  <TableCell className="w-24">{match.round}</TableCell>
+                  <TableCell className="w-40">
+                    <div className="flex justify-end items-center w-full">
+                      <FlagDisplay displayName={match.homeTeam} />
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="w-12 text-center">
+                    {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : time}
+                  </TableCell>
+
+                  <TableCell className="w-40">
+                    <div className="flex justify-start items-center w-full">
+                      <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
+                      View
+                    </RouterButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  });
 };
 
 export const Route = createFileRoute('/matches/')({
