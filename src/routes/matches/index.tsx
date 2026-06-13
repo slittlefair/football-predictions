@@ -43,16 +43,21 @@ const RouteComponent = () => {
               const { time } = formatDate(match.date);
               return (
                 <TableRow key={match.id}>
-                  <TableCell className="w-12">{time}</TableCell>
                   <TableCell className="w-24">{match.round}</TableCell>
-                  <TableCell className="flex justify-end items-center w-40">
-                    <FlagDisplay displayName={match.homeTeam} />
+                  <TableCell className="w-40">
+                    <div className="flex justify-end items-center w-full">
+                      <FlagDisplay displayName={match.homeTeam} />
+                    </div>
                   </TableCell>
-                  <TableCell className="w-12">
-                    {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : ''}
+
+                  <TableCell className="w-12 text-center">
+                    {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : time}
                   </TableCell>
-                  <TableCell className="flex justify-start items-center w-40">
-                    <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
+
+                  <TableCell className="w-40">
+                    <div className="flex justify-start items-center w-full">
+                      <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
