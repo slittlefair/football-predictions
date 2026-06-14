@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import classNames from 'classnames';
-import { addDays, differenceInSeconds, endOfDay } from 'date-fns';
+import { differenceInSeconds } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { type Match, useGetMatches, useGetParticipants } from '@/api/generated';
 import { FlagDisplay } from '@/components/FlagDisplay';
@@ -66,10 +66,7 @@ const RouteComponent = () => {
   });
 };
 
-const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boolean }) => {
-  const { data } = useGetParticipants();
-
-  const { time } = formatDate(match.date);
+const Countdown = ({ date }: { date: string }) => {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -80,23 +77,38 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
     return () => clearInterval(timer);
   }, []);
 
-  const seconds = Math.max(0, differenceInSeconds(new Date(match.date), now));
-  const endOfTomorrow = endOfDay(addDays(now, 1));
+  const seconds = Math.max(0, differenceInSeconds(new Date(date), now));
+  // const endOfTomorrow = endOfDay(addDays(now, 1));
 
-  const secondsUntilEndOfTomorrow = differenceInSeconds(endOfTomorrow, now);
+  // const secondsUntilEndOfTomorrow = differenceInSeconds(endOfTomorrow, now);
 
-  const missingPreds = [];
-  if (seconds < secondsUntilEndOfTomorrow && data?.data) {
-    for (const p of data.data) {
-      const m = p.predictions.find(p => p.id === match.id);
-      if (!m) {
-        continue;
-      }
-      if (m.homeScore === undefined || m.awayScore === undefined) {
-        missingPreds.push(p.name);
-      }
-    }
-  }
+  return (
+    <div
+      className={classNames({
+        'text-red-600 font-bold': seconds < 3600,
+      })}
+    >
+      {renderCountdown(seconds)}
+    </div>
+  );
+};
+
+const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boolean }) => {
+  // const { data } = useGetParticipants();
+  const { time } = formatDate(match.date);
+
+  // const missingPreds = [];
+  // if (seconds < secondsUntilEndOfTomorrow && data?.data) {
+  //   for (const p of data.data) {
+  //     const m = p.predictions.find(p => p.id === match.id);
+  //     if (!m) {
+  //       continue;
+  //     }
+  //     if (m.homeScore === undefined || m.awayScore === undefined) {
+  //       missingPreds.push(p.name);
+  //     }
+  //   }
+  // }
 
   return (
     <TRow key={match.id}>
@@ -117,14 +129,8 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
         </div>
       </TableCell>
 
-      <TableCell
-        className={classNames(`w-20`, {
-          'text-red-600 font-bold': seconds < 3600,
-        })}
-      >
-        {showCountdown && renderCountdown(seconds)}
-      </TableCell>
-      <TableCell className="w-24 text-red-600 font-bold">
+      <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
+      {/* <TableCell className="w-24 text-red-600 font-bold">
         {missingPreds.length > 0 && (
           <>
             Missing:
@@ -135,7 +141,7 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
             </ul>
           </>
         )}
-      </TableCell>
+      </TableCell> */}
       <TableCell>
         <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
           View
