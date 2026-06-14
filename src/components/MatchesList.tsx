@@ -143,6 +143,14 @@ const TableRow = ({
         </div>
       </TableCell>
 
+      {prediction && (
+        <TableCell className="w-36">
+          {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
+          {'  '}
+          {havePrediction && match.hasResult && `(${prediction.points} points)`}
+        </TableCell>
+      )}
+
       <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
       {/* <TableCell className="w-24 text-red-600 font-bold">
         {missingPreds.length > 0 && (
@@ -156,14 +164,6 @@ const TableRow = ({
           </>
         )}
       </TableCell> */}
-      {prediction && (
-        <>
-          <TableCell>
-            {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
-          </TableCell>
-          <TableCell>{havePrediction && match.hasResult && prediction.points}</TableCell>
-        </>
-      )}
       <TableCell>
         <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
           View
