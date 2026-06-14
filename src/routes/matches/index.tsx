@@ -83,7 +83,7 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
   const seconds = Math.max(0, differenceInSeconds(new Date(match.date), now));
 
   const missingPreds = [];
-  if (seconds < 86400 && data?.data) {
+  if (seconds < 60 * 60 * 24 && data?.data) {
     for (const p of data.data) {
       const m = p.predictions.find(p => p.id === match.id);
       if (!m) {
