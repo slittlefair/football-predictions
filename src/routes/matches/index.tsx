@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import classNames from 'classnames';
-import { differenceInSeconds } from 'date-fns';
+import { addDays, differenceInSeconds, endOfDay } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { type Match, useGetMatches, useGetParticipants } from '@/api/generated';
 import { FlagDisplay } from '@/components/FlagDisplay';
@@ -81,9 +81,12 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
   }, []);
 
   const seconds = Math.max(0, differenceInSeconds(new Date(match.date), now));
+  const endOfTomorrow = endOfDay(addDays(now, 1));
+
+  const secondsUntilEndOfTomorrow = differenceInSeconds(endOfTomorrow, now);
 
   const missingPreds = [];
-  if (seconds < 60 * 60 * 24 && data?.data) {
+  if (seconds < secondsUntilEndOfTomorrow && data?.data) {
     for (const p of data.data) {
       const m = p.predictions.find(p => p.id === match.id);
       if (!m) {
