@@ -1,16 +1,8 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
-import classNames from 'classnames';
 import { useGetMatches, useGetParticipant } from '@/api/generated';
 import { FlagCell } from '@/components/FlagDisplay';
-import { RouterButton } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { MatchesList } from '@/components/MatchesList';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 export const Route = createFileRoute('/participants/$name')({
   component: RouteComponent,
@@ -60,7 +52,9 @@ function RouteComponent() {
         </Table>
       </div>
 
-      {matchesResp && (
+      {matchesResp && <MatchesList matches={matchesResp.data} participant={participant} />}
+
+      {/* {matchesResp && (
         <div>
           <Table className="w-2xl">
             <TableHeader>
@@ -108,7 +102,7 @@ function RouteComponent() {
             </TableBody>
           </Table>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
