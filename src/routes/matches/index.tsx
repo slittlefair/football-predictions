@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { differenceInSeconds } from 'date-fns';
 import { useEffect, useState } from 'react';
-import { type Match, useGetMatches } from '@/api/generated';
+import { type Match, useGetMatches, useGetParticipants } from '@/api/generated';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow as TRow } from '@/components/ui/table';
@@ -10,12 +10,17 @@ import { formatDate } from '@/utils/date';
 
 const RouteComponent = () => {
   const { data, isLoading, error } = useGetMatches();
+  const {
+    data: participantsResp,
+    isLoading: partsLoading,
+    error: partsError,
+  } = useGetParticipants();
 
-  if (error) {
+  if (error || partsError) {
     return <p>Something went wrong</p>;
   }
 
-  if (isLoading || !data) {
+  if (isLoading || !data || partsLoading || !participantsResp) {
     return <p>Loading...</p>;
   }
 
@@ -47,9 +52,9 @@ const RouteComponent = () => {
   return matchSections.map(sec => {
     const { date } = formatDate(sec[0].date);
     return (
-      <div key={date}>
-        <h3>{date}</h3>
-        <Table className="w-2xl">
+      <div key={date} className="p-3">
+        <h3 className="font-bold mb-2">{date}</h3>
+        <Table className="w-4xl">
           <TableBody>
             {sec.map(match => (
               <TableRow key={match.id} match={match} showCountdown={match.id === nextMatchId} />
@@ -62,6 +67,8 @@ const RouteComponent = () => {
 };
 
 const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boolean }) => {
+  const { data } = useGetParticipants();
+
   const { time } = formatDate(match.date);
   const [now, setNow] = useState(new Date());
 
@@ -74,6 +81,19 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
   }, []);
 
   const seconds = Math.max(0, differenceInSeconds(new Date(match.date), now));
+
+  const missingPreds = [];
+  if (seconds < 86400 && data?.data) {
+    for (const p of data.data) {
+      const m = p.predictions.find(p => p.id === match.id);
+      if (!m) {
+        continue;
+      }
+      if (m.homeScore === undefined || m.awayScore === undefined) {
+        missingPreds.push(p.name);
+      }
+    }
+  }
 
   return (
     <TRow key={match.id}>
@@ -100,6 +120,18 @@ const TableRow = ({ match, showCountdown }: { match: Match; showCountdown: boole
         })}
       >
         {showCountdown && renderCountdown(seconds)}
+      </TableCell>
+      <TableCell className="w-24 text-red-600 font-bold">
+        {missingPreds.length > 0 && (
+          <>
+            Missing:
+            <ul className="list-disc">
+              {missingPreds.map(mp => (
+                <li key={mp}>{mp}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </TableCell>
       <TableCell>
         <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
