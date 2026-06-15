@@ -10,14 +10,20 @@ import { formatDate } from '@/utils/date';
 export const MatchesList = ({
   matches,
   participant,
+  missingPredictions,
 }: {
   matches: Match[];
   participant?: Participant;
+  missingPredictions?: Record<number, string[]>;
 }) => {
   let currentDateString = '';
   let matchBucket: Match[] = [];
-  const matchSections = matches.reduce<Match[][]>((acc, m) => {
+  // TODO fix bug where final doesn't show byt 3/4 place shows twice
+  const matchSections = matches.reduce<Match[][]>((acc, m, i) => {
     const { date } = formatDate(m.date);
+    if (i === matches.length - 1) {
+      acc.push(matchBucket);
+    }
     if (date === currentDateString) {
       matchBucket.push(m);
       return acc;
@@ -25,6 +31,7 @@ export const MatchesList = ({
     if (matchBucket.length > 0) {
       acc.push(matchBucket);
     }
+
     matchBucket = [m];
     currentDateString = date;
     return acc;
@@ -46,14 +53,32 @@ export const MatchesList = ({
         <h3 className="font-bold mb-2">{date}</h3>
         <Table className="w-4xl">
           <TableBody>
-            {sec.map(match => (
-              <TableRow
-                key={match.id}
-                match={match}
-                showCountdown={match.id === nextMatchId}
-                participant={participant}
-              />
-            ))}
+            {sec.map(match => {
+              const tableRow = (
+                <TableRow
+                  key={match.id}
+                  match={match}
+                  showCountdown={match.id === nextMatchId}
+                  participant={participant}
+                />
+              );
+              if (!missingPredictions) {
+                return tableRow;
+              }
+              const missingPreds = missingPredictions[match.id];
+              return (
+                <>
+                  {tableRow}
+                  {missingPreds.length > 0 && (
+                    <TRow>
+                      <TableCell colSpan={5} className="pl-3 text-red-600 font-bold">
+                        Missing Predictions: {missingPreds.join(', ')}
+                      </TableCell>
+                    </TRow>
+                  )}
+                </>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
