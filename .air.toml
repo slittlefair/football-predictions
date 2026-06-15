@@ -4,4 +4,5 @@ tmp_dir = "tmp"
 [build]
 cmd = "go build -o ./tmp/main ./internal"
 bin = "./tmp/main"
-include_dir = ["internal"]
+include_dir = ["internal", "data"]
+include_ext = ["go", "csv"]
