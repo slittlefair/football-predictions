@@ -9,10 +9,10 @@ Match Number,Round Number,Date,Home,Home Score,Away Score,Away,Group
 6,1,2026-06-14T04:00:00Z,Australia,2,0,Türkiye,Group D
 10,1,2026-06-14T17:00:00Z,Germany,7,1,Curaçao,Group E
 11,1,2026-06-14T20:00:00Z,Netherlands,2,2,Japan,Group F
-9,1,2026-06-14T23:00:00Z,Côte d'Ivoire,,,Ecuador,Group E
-12,1,2026-06-15T02:00:00Z,Sweden,,,Tunisia,Group F
-14,1,2026-06-15T16:00:00Z,Spain,,,Cabo Verde,Group H
-16,1,2026-06-15T19:00:00Z,Belgium,,,Egypt,Group G
+9,1,2026-06-14T23:00:00Z,Côte d'Ivoire,1,0,Ecuador,Group E
+12,1,2026-06-15T02:00:00Z,Sweden,5,1,Tunisia,Group F
+14,1,2026-06-15T16:00:00Z,Spain,0,0,Cabo Verde,Group H
+16,1,2026-06-15T19:00:00Z,Belgium,1,1,Egypt,Group G
 13,1,2026-06-15T22:00:00Z,Saudi Arabia,,,Uruguay,Group H
 15,1,2026-06-16T01:00:00Z,IR Iran,,,New Zealand,Group G
 17,1,2026-06-16T19:00:00Z,France,,,Senegal,Group I
