@@ -18,22 +18,26 @@ export const MatchesList = ({
 }) => {
   let currentDateString = '';
   let matchBucket: Match[] = [];
-  // TODO fix bug where final doesn't show byt 3/4 place shows twice
   const matchSections = matches.reduce<Match[][]>((acc, m, i) => {
     const { date } = formatDate(m.date);
-    if (i === matches.length - 1) {
-      acc.push(matchBucket);
-    }
+
     if (date === currentDateString) {
       matchBucket.push(m);
+      if (i === matches.length - 1) {
+        acc.push(matchBucket);
+      }
       return acc;
     }
+
     if (matchBucket.length > 0) {
       acc.push(matchBucket);
     }
 
     matchBucket = [m];
     currentDateString = date;
+    if (i === matches.length - 1) {
+      acc.push(matchBucket);
+    }
     return acc;
   }, []);
 
@@ -98,9 +102,6 @@ const Countdown = ({ date }: { date: string }) => {
   }, []);
 
   const seconds = Math.max(0, differenceInSeconds(new Date(date), now));
-  // const endOfTomorrow = endOfDay(addDays(now, 1));
-
-  // const secondsUntilEndOfTomorrow = differenceInSeconds(endOfTomorrow, now);
 
   return (
     <div
@@ -122,23 +123,9 @@ const TableRow = ({
   showCountdown: boolean;
   participant?: Participant;
 }) => {
-  // const { data } = useGetParticipants();
   const { time } = formatDate(match.date);
   const prediction = participant?.predictions.find(p => p.id === match.id);
   const havePrediction = prediction?.homeScore !== undefined && prediction?.awayScore !== undefined;
-
-  // const missingPreds = [];
-  // if (seconds < secondsUntilEndOfTomorrow && data?.data) {
-  //   for (const p of data.data) {
-  //     const m = p.predictions.find(p => p.id === match.id);
-  //     if (!m) {
-  //       continue;
-  //     }
-  //     if (m.homeScore === undefined || m.awayScore === undefined) {
-  //       missingPreds.push(p.name);
-  //     }
-  //   }
-  // }
 
   return (
     <TRow
