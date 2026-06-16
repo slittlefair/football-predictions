@@ -181,6 +181,24 @@ func (t Tournament) matchHandler() http.HandlerFunc {
 			Match: entry,
 		}
 
+		if matchIdx != 0 {
+			prevMatch := t.Matches[matchIdx-1]
+			matchPredictions.PreviousNav = &gen.MatchNavigation{
+				Id:       prevMatch.ID,
+				HomeTeam: prevMatch.Home,
+				AwayTeam: prevMatch.Away,
+			}
+		}
+
+		if matchIdx != len(t.Matches)-1 {
+			nextMatch := t.Matches[matchIdx+1]
+			matchPredictions.NextNav = &gen.MatchNavigation{
+				Id:       nextMatch.ID,
+				HomeTeam: nextMatch.Home,
+				AwayTeam: nextMatch.Away,
+			}
+		}
+
 		for _, p := range t.Participants {
 			for _, pred := range p.Predictions {
 				if pred.ID == match.ID {

@@ -71,6 +71,22 @@ components:
         hasResult:
           type: boolean
 
+    MatchNavigation:
+      type: object
+      required:
+        - id
+        - homeTeam
+        - awayTeam
+      properties:
+        id:
+          type: integer
+
+        homeTeam:
+          type: string
+
+        awayTeam:
+          type: string
+
     MatchPredictions:
       type: object
       required:
@@ -88,6 +104,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Prediction"
+
+        previousNav:
+          $ref: "#/components/schemas/MatchNavigation"
+
+        nextNav:
+          $ref: "#/components/schemas/MatchNavigation"
     
     Prediction:
       type: object
@@ -216,7 +238,7 @@ paths:
   /api/matches/{id}:
     get:
       operationId: getMatch
-      summary: Get a match with its predictions by id
+      summary: Get a match with its predictions and navigation information by id
       parameters:
         - name: id
           in: path
