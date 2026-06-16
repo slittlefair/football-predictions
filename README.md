@@ -34,5 +34,8 @@ TODO list:
 - [ ] Check any old files/components that can be deleted
 - [ ] Proper README
 - [ ] Center titles properly for matches
+- [ ] Scroll to next match
+- [ ] Page in nav for next match
+  - [ ] And current match?
 - [ ] Show countdown on (next?) matches
 - [ ] Decide on next steps (db? logins? alternate backend/front end type consistency?)
