@@ -64,7 +64,7 @@ function RouteComponent() {
         </div>
       )}
       <h3>
-        {date} | {match.round}
+        {date} <span className="text-lg font-bold">●</span> {match.round}
       </h3>
       <h4 className="pb-3 font-bold flex gap-2 items-center">{display}</h4>
 
