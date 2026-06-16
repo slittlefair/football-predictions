@@ -25,6 +25,7 @@ type PointsTallier struct {
 	Name          string
 	Points        int
 	CorrectScores int
+	JokersPlayed  int
 }
 
 func sortPointsTallier(a, b *PointsTallier) int {
@@ -68,6 +69,10 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 					played[match.ID] = struct{}{}
 				}
 
+				if pred.Joker {
+					curr.JokersPlayed++
+				}
+
 				score, wasCorrect := pred.scoreMatch(match)
 				curr.Points += score
 				if wasCorrect {
@@ -103,6 +108,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				TotalPoints:      v.Points,
 				PreviousPosition: previousPosition + 1,
 				Played:           len(played),
+				JokersPlayed:     v.JokersPlayed,
 			})
 		}
 
