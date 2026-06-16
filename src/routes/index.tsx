@@ -31,12 +31,13 @@ const LeaderBoard = () => {
       {/* <h1 >World Cup Predictor</h1> */}
 
       <h3 className="display-title font-bold">Leaderboard</h3>
-      <Table className="table-fixed w-fit">
+      <Table className="table-fixed w-fit mb-2">
         <TableHeader>
           <TableRow>
             <TableHead className="w-16" />
             <TableHead className="w-24" />
-            <TableHead className="w-16">P</TableHead>
+            <TableHead className="w-14">P</TableHead>
+            <TableHead className="w-14">JR</TableHead>
             <TableHead className="w-16">CS</TableHead>
             <TableHead className="w-20">Points</TableHead>
           </TableRow>
@@ -57,6 +58,7 @@ const LeaderBoard = () => {
                 </TableCell>
                 <TableCell>{p.participant}</TableCell>
                 <TableCell>{p.played}</TableCell>
+                <TableCell>{3 - p.jokersPlayed}</TableCell>
                 <TableCell>{p.correctScores}</TableCell>
                 <TableCell className="font-bold text-lg">{p.totalPoints}</TableCell>
               </TableRow>
@@ -64,6 +66,11 @@ const LeaderBoard = () => {
           })}
         </TableBody>
       </Table>
+      <div className="text-sm">
+        <strong>P</strong> = Played&nbsp;&nbsp;&nbsp;
+        <strong>JR</strong> = Jokers Remaining&nbsp;&nbsp;&nbsp;
+        <strong>CS</strong> = Correct Scores
+      </div>
     </main>
   );
 };
