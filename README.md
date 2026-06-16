@@ -27,9 +27,12 @@ TODO list:
 - [x] Style match page
 - [ ] Make all page centered
 - [ ] Consistent page headers
-- [ ] Handle jokers played in front end
+- [ ] Order predictions by scores, then names
+- [x] Handle jokers played in front end
 - [x] Show dates nicely
 - [x] ~Kits api?~ not avaiable, won't do
 - [ ] Check any old files/components that can be deleted
 - [ ] Proper README
+- [ ] Center titles properly for matches
+- [ ] Show countdown on (next?) matches
 - [ ] Decide on next steps (db? logins? alternate backend/front end type consistency?)
