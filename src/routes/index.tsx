@@ -31,14 +31,14 @@ const LeaderBoard = () => {
       {/* <h1 >World Cup Predictor</h1> */}
 
       <h3 className="display-title font-bold">Leaderboard</h3>
-      <Table className="w-3/5">
+      <Table className="table-fixed w-fit">
         <TableHeader>
           <TableRow>
-            <TableHead />
-            <TableHead />
-            <TableHead>P</TableHead>
-            <TableHead>CS</TableHead>
-            <TableHead>Points</TableHead>
+            <TableHead className="w-16" />
+            <TableHead className="w-24" />
+            <TableHead className="w-16">P</TableHead>
+            <TableHead className="w-16">CS</TableHead>
+            <TableHead className="w-20">Points</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -10,23 +10,34 @@ import { formatDate } from '@/utils/date';
 export const MatchesList = ({
   matches,
   participant,
+  missingPredictions,
 }: {
   matches: Match[];
   participant?: Participant;
+  missingPredictions?: Record<number, string[]>;
 }) => {
   let currentDateString = '';
   let matchBucket: Match[] = [];
-  const matchSections = matches.reduce<Match[][]>((acc, m) => {
+  const matchSections = matches.reduce<Match[][]>((acc, m, i) => {
     const { date } = formatDate(m.date);
+
     if (date === currentDateString) {
       matchBucket.push(m);
+      if (i === matches.length - 1) {
+        acc.push(matchBucket);
+      }
       return acc;
     }
+
     if (matchBucket.length > 0) {
       acc.push(matchBucket);
     }
+
     matchBucket = [m];
     currentDateString = date;
+    if (i === matches.length - 1) {
+      acc.push(matchBucket);
+    }
     return acc;
   }, []);
 
@@ -46,14 +57,32 @@ export const MatchesList = ({
         <h3 className="font-bold mb-2">{date}</h3>
         <Table className="w-4xl">
           <TableBody>
-            {sec.map(match => (
-              <TableRow
-                key={match.id}
-                match={match}
-                showCountdown={match.id === nextMatchId}
-                participant={participant}
-              />
-            ))}
+            {sec.map(match => {
+              const tableRow = (
+                <TableRow
+                  key={match.id}
+                  match={match}
+                  showCountdown={match.id === nextMatchId}
+                  participant={participant}
+                />
+              );
+              if (!missingPredictions) {
+                return tableRow;
+              }
+              const missingPreds = missingPredictions[match.id];
+              return (
+                <>
+                  {tableRow}
+                  {missingPreds.length > 0 && (
+                    <TRow>
+                      <TableCell colSpan={5} className="pl-3 text-red-600 font-bold">
+                        Missing Predictions: {missingPreds.join(', ')}
+                      </TableCell>
+                    </TRow>
+                  )}
+                </>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
@@ -73,9 +102,6 @@ const Countdown = ({ date }: { date: string }) => {
   }, []);
 
   const seconds = Math.max(0, differenceInSeconds(new Date(date), now));
-  // const endOfTomorrow = endOfDay(addDays(now, 1));
-
-  // const secondsUntilEndOfTomorrow = differenceInSeconds(endOfTomorrow, now);
 
   return (
     <div
@@ -97,23 +123,9 @@ const TableRow = ({
   showCountdown: boolean;
   participant?: Participant;
 }) => {
-  // const { data } = useGetParticipants();
   const { time } = formatDate(match.date);
   const prediction = participant?.predictions.find(p => p.id === match.id);
   const havePrediction = prediction?.homeScore !== undefined && prediction?.awayScore !== undefined;
-
-  // const missingPreds = [];
-  // if (seconds < secondsUntilEndOfTomorrow && data?.data) {
-  //   for (const p of data.data) {
-  //     const m = p.predictions.find(p => p.id === match.id);
-  //     if (!m) {
-  //       continue;
-  //     }
-  //     if (m.homeScore === undefined || m.awayScore === undefined) {
-  //       missingPreds.push(p.name);
-  //     }
-  //   }
-  // }
 
   return (
     <TRow

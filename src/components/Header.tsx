@@ -18,6 +18,13 @@ export default function Header() {
             Matches
           </Link>
           <Link
+            to="/missingPredictions"
+            className="nav-link"
+            activeProps={{ className: 'nav-link is-active' }}
+          >
+            Missing Predictions
+          </Link>
+          <Link
             to="/tournament"
             className="nav-link"
             activeProps={{ className: 'nav-link is-active' }}
