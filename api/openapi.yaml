@@ -15,6 +15,7 @@ components:
         - previousPosition
         - correctScores
         - played
+        - jokersPlayed
       properties:
         participant:
           type: string
@@ -32,6 +33,9 @@ components:
           type: integer
         
         played:
+          type: integer
+
+        jokersPlayed:
           type: integer
 
     Match:

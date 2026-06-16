@@ -26,6 +26,7 @@ export interface Leaderboard {
   previousPosition: number;
   correctScores: number;
   played: number;
+  jokersPlayed: number;
 }
 
 export interface Match {

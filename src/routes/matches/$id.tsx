@@ -4,6 +4,7 @@ import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import type { ReactNode } from 'react';
 import { type MatchNavigation, useGetMatch } from '@/api/generated';
+import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -52,7 +53,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="p-6 flex flex-col items-center">
+    <div>
       {(previousNav || nextNav) && (
         <div className="flex w-full">
           <NavButton navItem={previousNav} leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} />
@@ -88,6 +89,9 @@ function RouteComponent() {
                 })}
               >
                 <TableCell>{p.participant}</TableCell>
+                <TableCell className="pl-0">
+                  {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
+                </TableCell>
                 <TableCell>
                   {p.homeScore !== undefined && p.awayScore !== undefined
                     ? `${p.homeScore} - ${p.awayScore}`
