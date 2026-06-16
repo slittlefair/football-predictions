@@ -53,9 +53,9 @@ function RouteComponent() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       {(previousNav || nextNav) && (
-        <div className="flex w-full">
+        <div className="flex w-full mb-2">
           <NavButton navItem={previousNav} leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} />
           <NavButton
             navItem={nextNav}
@@ -65,9 +65,9 @@ function RouteComponent() {
         </div>
       )}
       <h3>
-        {date} <span className="text-lg font-bold">●</span> {match.round}
+        {date} <span className="text-lg">●</span> {match.round}
       </h3>
-      <h4 className="pb-3 font-bold flex gap-2 items-center">{display}</h4>
+      <h4 className="mt-1 mb-2 font-bold flex gap-2 items-center">{display}</h4>
 
       <Table className="w-52 m-auto">
         <TableBody>
