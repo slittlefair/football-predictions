@@ -52,57 +52,9 @@ function RouteComponent() {
         </Table>
       </div>
 
-      {matchesResp && <MatchesList matches={matchesResp.data} participant={participant} />}
-
-      {/* {matchesResp && (
-        <div>
-          <Table className="w-2xl">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Round</TableHead>
-                <TableHead>Home</TableHead>
-                <TableHead>Score</TableHead>
-                <TableHead>Away</TableHead>
-                <TableHead>Prediction</TableHead>
-                <TableHead>Points</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {participant.predictions.map(p => {
-                const match = matchesResp.data[p.id - 1];
-                const havePrediction = p.homeScore !== undefined && p.awayScore !== undefined;
-                return (
-                  <TableRow
-                    key={match.id}
-                    className={classNames({
-                      'bg-red-400': match.hasResult && p.points === 0,
-                      'bg-yellow-400': match.hasResult && p.points > 0 && p.points < 3,
-                      'bg-emerald-400': match.hasResult && p.points > 2,
-                    })}
-                  >
-                    <TableCell>{match.date}</TableCell>
-                    <TableCell>{match.round}</TableCell>
-                    <TableCell>{match.homeTeam}</TableCell>
-                    <TableCell>
-                      {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : ''}
-                    </TableCell>
-                    <TableCell>{match.awayTeam}</TableCell>
-                    <TableCell>{havePrediction && `${p.homeScore} - ${p.awayScore}`}</TableCell>
-                    <TableCell>{havePrediction && match.hasResult && p.points}</TableCell>
-                    <TableCell>
-                      <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
-                        View
-                      </RouterButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )} */}
+      {matchesResp && (
+        <MatchesList matches={matchesResp.data} predictions={participant.predictions} />
+      )}
     </div>
   );
 }

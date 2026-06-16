@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import { differenceInSeconds } from 'date-fns';
 import { useEffect, useState } from 'react';
-import type { Match, Participant } from '@/api/generated';
+import type { Match, Prediction } from '@/api/generated';
+import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow as TRow } from '@/components/ui/table';
@@ -9,11 +10,11 @@ import { formatDate } from '@/utils/date';
 
 export const MatchesList = ({
   matches,
-  participant,
+  predictions,
   missingPredictions,
 }: {
   matches: Match[];
-  participant?: Participant;
+  predictions?: Prediction[];
   missingPredictions?: Record<number, string[]>;
 }) => {
   let currentDateString = '';
@@ -63,7 +64,7 @@ export const MatchesList = ({
                   key={match.id}
                   match={match}
                   showCountdown={match.id === nextMatchId}
-                  participant={participant}
+                  prediction={predictions?.find(p => p.id === match.id)}
                 />
               );
               if (!missingPredictions) {
@@ -117,14 +118,13 @@ const Countdown = ({ date }: { date: string }) => {
 const TableRow = ({
   match,
   showCountdown,
-  participant,
+  prediction,
 }: {
   match: Match;
   showCountdown: boolean;
-  participant?: Participant;
+  prediction?: Prediction;
 }) => {
   const { time } = formatDate(match.date);
-  const prediction = participant?.predictions.find(p => p.id === match.id);
   const havePrediction = prediction?.homeScore !== undefined && prediction?.awayScore !== undefined;
 
   return (
@@ -144,38 +144,25 @@ const TableRow = ({
           <FlagDisplay displayName={match.homeTeam} />
         </div>
       </TableCell>
-
       <TableCell className="w-12 text-center">
         {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : time}
       </TableCell>
-
       <TableCell className="w-40">
         <div className="flex justify-start items-center w-full">
           <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
         </div>
       </TableCell>
-
       {prediction && (
-        <TableCell className="w-36">
+        <TableCell className="w-28">
           {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
           {'  '}
           {havePrediction && match.hasResult && `(${prediction.points} points)`}
         </TableCell>
       )}
-
+      <TableCell className="w-10">
+        {prediction?.usedJoker && <img src={Joker} alt="Joker" className="h-6" />}
+      </TableCell>
       <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
-      {/* <TableCell className="w-24 text-red-600 font-bold">
-        {missingPreds.length > 0 && (
-          <>
-            Missing:
-            <ul className="list-disc">
-              {missingPreds.map(mp => (
-                <li key={mp}>{mp}</li>
-              ))}
-            </ul>
-          </>
-        )}
-      </TableCell> */}
       <TableCell>
         <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
           View
