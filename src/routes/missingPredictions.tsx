@@ -3,7 +3,7 @@ import { addDays, endOfDay, isAfter, isBefore } from 'date-fns';
 import { useGetMatches, useGetParticipants } from '@/api/generated';
 import { MatchesList } from '@/components/MatchesList';
 
-export const Route = createFileRoute('/missingResults')({
+export const Route = createFileRoute('/missingPredictions')({
   component: RouteComponent,
 });
 
