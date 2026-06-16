@@ -1,7 +1,11 @@
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
-import { useGetMatch } from '@/api/generated';
+import type { ReactNode } from 'react';
+import { type MatchNavigation, useGetMatch } from '@/api/generated';
 import { FlagDisplay } from '@/components/FlagDisplay';
+import { RouterButton } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/utils/date';
 
@@ -17,7 +21,7 @@ function RouteComponent() {
     return 'Error';
   }
 
-  const { match, predictions } = data.data;
+  const { match, predictions, previousNav, nextNav } = data.data;
 
   const sortedPredictions = predictions.sort((a, b) => {
     if (a.points === b.points) {
@@ -49,6 +53,16 @@ function RouteComponent() {
 
   return (
     <div className="p-6 flex flex-col items-center">
+      {(previousNav || nextNav) && (
+        <div className="flex w-full">
+          <NavButton navItem={previousNav} leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} />
+          <NavButton
+            navItem={nextNav}
+            className="ml-auto"
+            rightIcon={<FontAwesomeIcon icon={faChevronRight} />}
+          />
+        </div>
+      )}
       <h3>
         {date} | {match.round}
       </h3>
@@ -88,3 +102,26 @@ function RouteComponent() {
     </div>
   );
 }
+
+const NavButton = ({
+  navItem,
+  className,
+  leftIcon,
+  rightIcon,
+}: {
+  navItem?: MatchNavigation;
+  className?: string;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+}) => {
+  if (!navItem) {
+    return null;
+  }
+  return (
+    <RouterButton to="/matches/$id" params={{ id: String(navItem.id) }} className={className}>
+      {leftIcon}
+      {navItem.homeTeam} v {navItem.awayTeam}
+      {rightIcon}
+    </RouterButton>
+  );
+};

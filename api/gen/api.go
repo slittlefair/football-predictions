@@ -29,11 +29,20 @@ type Match struct {
 	Round     string    `json:"round"`
 }
 
+// MatchNavigation defines model for MatchNavigation.
+type MatchNavigation struct {
+	AwayTeam string `json:"awayTeam"`
+	HomeTeam string `json:"homeTeam"`
+	Id       int    `json:"id"`
+}
+
 // MatchPredictions defines model for MatchPredictions.
 type MatchPredictions struct {
-	Id          int          `json:"id"`
-	Match       Match        `json:"match"`
-	Predictions []Prediction `json:"predictions"`
+	Id          int              `json:"id"`
+	Match       Match            `json:"match"`
+	NextNav     *MatchNavigation `json:"nextNav,omitempty"`
+	Predictions []Prediction     `json:"predictions"`
+	PreviousNav *MatchNavigation `json:"previousNav,omitempty"`
 }
 
 // Participant defines model for Participant.

@@ -41,6 +41,12 @@ export interface Match {
   hasResult: boolean;
 }
 
+export interface MatchNavigation {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+}
+
 export interface Prediction {
   id: number;
   participant: string;
@@ -55,6 +61,8 @@ export interface MatchPredictions {
   id: number;
   match: Match;
   predictions: Prediction[];
+  previousNav?: MatchNavigation;
+  nextNav?: MatchNavigation;
 }
 
 export interface TournamentPredictions {
@@ -346,7 +354,7 @@ export const getGetMatchUrl = (id: number,) => {
 }
 
 /**
- * @summary Get a match with its predictions by id
+ * @summary Get a match with its predictions and navigation information by id
  */
 export const getMatch = async (id: number, options?: RequestInit): Promise<getMatchResponse> => {
 
@@ -424,7 +432,7 @@ export function useGetMatch<TData = Awaited<ReturnType<typeof getMatch>>, TError
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get a match with its predictions by id
+ * @summary Get a match with its predictions and navigation information by id
  */
 
 export function useGetMatch<TData = Awaited<ReturnType<typeof getMatch>>, TError = void>(
