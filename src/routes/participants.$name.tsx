@@ -2,6 +2,8 @@ import { createFileRoute, useParams } from '@tanstack/react-router';
 import { useGetMatches, useGetParticipant } from '@/api/generated';
 import { FlagCell } from '@/components/FlagDisplay';
 import { MatchesList } from '@/components/MatchesList';
+import { Card } from '@/components/ui/card';
+import { PageTitle } from '@/components/ui/pageTitle';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 export const Route = createFileRoute('/participants/$name')({
@@ -23,9 +25,8 @@ function RouteComponent() {
 
   return (
     <div>
-      <h3>{participant.name}</h3>
-
-      <div className="p-3">
+      <PageTitle>{participant.name}</PageTitle>
+      <Card>
         <Table className="w-72">
           <TableBody>
             <TableRow>
@@ -50,7 +51,7 @@ function RouteComponent() {
             </TableRow>
           </TableBody>
         </Table>
-      </div>
+      </Card>
 
       {matchesResp && (
         <MatchesList matches={matchesResp.data} predictions={participant.predictions} />

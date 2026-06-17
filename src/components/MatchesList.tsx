@@ -1,10 +1,11 @@
+import { useNavigate } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { differenceInSeconds } from 'date-fns';
 import { useEffect, useState } from 'react';
 import type { Match, Prediction } from '@/api/generated';
 import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
-import { RouterButton } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow as TRow } from '@/components/ui/table';
 import { formatDate } from '@/utils/date';
 
@@ -54,9 +55,9 @@ export const MatchesList = ({
   return matchSections.map(sec => {
     const { date } = formatDate(sec[0].date);
     return (
-      <div key={date} className="p-3">
-        <h3 className="font-bold mb-2">{date}</h3>
-        <Table className="w-4xl">
+      <Card key={date} className="not-first:mt-4 max-w-3xl">
+        <h3 className="font-bold">{date}</h3>
+        <Table>
           <TableBody>
             {sec.map(match => {
               const tableRow = (
@@ -86,7 +87,7 @@ export const MatchesList = ({
             })}
           </TableBody>
         </Table>
-      </div>
+      </Card>
     );
   });
 };
@@ -126,17 +127,21 @@ const TableRow = ({
 }) => {
   const { time } = formatDate(match.date);
   const havePrediction = prediction?.homeScore !== undefined && prediction?.awayScore !== undefined;
+  const navigate = useNavigate();
 
   return (
     <TRow
       key={match.id}
       className={classNames(
+        'cursor-pointer',
         prediction && {
-          'bg-red-400': match.hasResult && prediction.points === 0,
-          'bg-yellow-400': match.hasResult && prediction.points > 0 && prediction.points < 3,
-          'bg-emerald-400': match.hasResult && prediction.points > 2,
+          'bg-red-400 hover:bg-red-500': match.hasResult && prediction.points === 0,
+          'bg-yellow-400 hover:bg-yellow-500':
+            match.hasResult && prediction.points > 0 && prediction.points < 3,
+          'bg-emerald-400 hover:bg-emerald-500': match.hasResult && prediction.points > 2,
         },
       )}
+      onClick={() => navigate({ to: '/matches/$id', params: { id: String(match.id) } })}
     >
       <TableCell className="w-24">{match.round}</TableCell>
       <TableCell className="w-40">
@@ -163,11 +168,6 @@ const TableRow = ({
         {prediction?.usedJoker && <img src={Joker} alt="Joker" className="h-6" />}
       </TableCell>
       <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
-      <TableCell>
-        <RouterButton to="/matches/$id" params={{ id: String(match.id) }}>
-          View
-        </RouterButton>
-      </TableCell>
     </TRow>
   );
 };

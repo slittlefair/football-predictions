@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useGetMatches, useGetParticipants } from '@/api/generated';
 import { MatchesList } from '@/components/MatchesList';
+import { PageTitle } from '@/components/ui/pageTitle';
 
 const RouteComponent = () => {
   const { data, isLoading, error } = useGetMatches();
@@ -18,7 +19,12 @@ const RouteComponent = () => {
     return <p>Loading...</p>;
   }
 
-  return <MatchesList matches={data.data} />;
+  return (
+    <div>
+      <PageTitle>Matches</PageTitle>
+      <MatchesList matches={data.data} />
+    </div>
+  );
 };
 
 export const Route = createFileRoute('/matches/')({
