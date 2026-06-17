@@ -65,7 +65,12 @@ const LeaderBoard = () => {
                   <TableCell>{p.played}</TableCell>
                   <TableCell>{3 - p.jokersPlayed}</TableCell>
                   <TableCell>{p.correctScores}</TableCell>
-                  <TableCell className="font-bold text-lg">{p.totalPoints}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-lg">{p.totalPoints}</span> (+
+                      {p.pointsDifference})
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })}

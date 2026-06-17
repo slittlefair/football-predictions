@@ -8,6 +8,7 @@ import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/utils/date';
 
@@ -17,10 +18,14 @@ export const Route = createFileRoute('/matches/$id')({
 
 function RouteComponent() {
   const { id } = useParams({ from: '/matches/$id' });
-  const { data } = useGetMatch(Number(id));
+  const { data, isPending, error } = useGetMatch(Number(id));
 
-  if (!data?.data) {
-    return 'Error';
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (isPending || !data?.data) {
+    return <Spinner className="size-8" />;
   }
 
   const { match, predictions, previousNav, nextNav } = data.data;

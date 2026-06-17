@@ -13,6 +13,7 @@ type Leaderboard struct {
 	JokersPlayed     int    `json:"jokersPlayed"`
 	Participant      string `json:"participant"`
 	Played           int    `json:"played"`
+	PointsDifference int    `json:"pointsDifference"`
 	Position         int    `json:"position"`
 	PreviousPosition int    `json:"previousPosition"`
 	TotalPoints      int    `json:"totalPoints"`

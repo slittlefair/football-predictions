@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { differenceInSeconds } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import type { Match, Prediction } from '@/api/generated';
 import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
@@ -73,7 +73,7 @@ export const MatchesList = ({
               }
               const missingPreds = missingPredictions[match.id];
               return (
-                <>
+                <Fragment key={`match-container-${match.id}`}>
                   {tableRow}
                   {missingPreds.length > 0 && (
                     <TRow>
@@ -82,7 +82,7 @@ export const MatchesList = ({
                       </TableCell>
                     </TRow>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </TableBody>
