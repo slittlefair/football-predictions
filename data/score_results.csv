@@ -16,9 +16,9 @@ Match Number,Round Number,Date,Home,Home Score,Away Score,Away,Group
 13,1,2026-06-15T22:00:00Z,Saudi Arabia,1,1,Uruguay,Group H
 15,1,2026-06-16T01:00:00Z,IR Iran,2,2,New Zealand,Group G
 17,1,2026-06-16T19:00:00Z,France,3,1,Senegal,Group I
-18,1,2026-06-16T22:00:00Z,Iraq,,,Norway,Group I
-19,1,2026-06-17T01:00:00Z,Argentina,,,Algeria,Group J
-20,1,2026-06-17T04:00:00Z,Austria,,,Jordan,Group J
+18,1,2026-06-16T22:00:00Z,Iraq,1,4,Norway,Group I
+19,1,2026-06-17T01:00:00Z,Argentina,3,0,Algeria,Group J
+20,1,2026-06-17T04:00:00Z,Austria,3,1,Jordan,Group J
 23,1,2026-06-17T17:00:00Z,Portugal,,,Congo DR,Group K
 22,1,2026-06-17T20:00:00Z,England,,,Croatia,Group L
 21,1,2026-06-17T23:00:00Z,Ghana,,,Panama,Group L
