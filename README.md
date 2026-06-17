@@ -23,9 +23,9 @@ TODO list:
 - [x] Countdown to next match
 - [ ] Use Tanstack tables
 - [x] Style cells with flags
-- [ ] Next/Previous match buttons
+- [x] Next/Previous match buttons
 - [x] Style match page
-- [ ] Make all page centered
+- [x] Make all page centered
 - [ ] Consistent page headers
 - [ ] Order predictions by scores, then names
 - [x] Handle jokers played in front end
@@ -33,7 +33,7 @@ TODO list:
 - [x] ~Kits api?~ not avaiable, won't do
 - [ ] Check any old files/components that can be deleted
 - [ ] Proper README
-- [ ] Center titles properly for matches
+- [x] Center titles properly for matches
 - [ ] Scroll to next match
 - [ ] Page in nav for next match
   - [ ] And current match?
