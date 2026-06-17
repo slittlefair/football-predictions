@@ -30,27 +30,7 @@ function RouteComponent() {
     }
     return b.points - a.points;
   });
-
-  const home = <FlagDisplay displayName={match.homeTeam} />;
-  const away = <FlagDisplay displayName={match.awayTeam} flagPosition="left" />;
   const { date, time } = formatDate(match.date);
-
-  let display = (
-    <>
-      {home} {time} {away}
-    </>
-  );
-  if (match.hasResult) {
-    display = (
-      <>
-        {home}{' '}
-        <p className="font-bold text-xl">
-          {match.homeScore} - {match.awayScore}
-        </p>{' '}
-        {away}
-      </>
-    );
-  }
 
   return (
     <div className="flex flex-col items-center">
@@ -67,7 +47,19 @@ function RouteComponent() {
       <h3>
         {date} <span className="text-lg">●</span> {match.round}
       </h3>
-      <h4 className="mt-1 mb-2 font-bold flex gap-2 items-center">{display}</h4>
+      <h4 className="grid grid-cols-[1fr_auto_1fr] gap-x-4 items-center font-bold pb-3">
+        <div className="flex justify-end">
+          <FlagDisplay displayName={match.homeTeam} />
+        </div>
+        <div>
+          <p className="font-bold text-xl">
+            {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : time}
+          </p>
+        </div>
+        <div className="flex justify-start">
+          <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
+        </div>
+      </h4>
 
       <Table className="w-52 m-auto">
         <TableBody>
