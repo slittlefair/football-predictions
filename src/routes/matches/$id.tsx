@@ -92,7 +92,7 @@ function RouteComponent() {
           </div>
         </div>
 
-        <Table className="w-52 m-auto">
+        <Table className="w-fit m-auto">
           <TableBody>
             {sortedPredictions.map(p => {
               const state = !match.hasResult
@@ -111,11 +111,13 @@ function RouteComponent() {
                     'bg-emerald-400 hover:bg-emerald-400': state === 'green',
                   })}
                 >
-                  <TableCell>{p.participant}</TableCell>
-                  <TableCell className="pl-0">
-                    {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
+                  <TableCell className="w-18 text-center">{p.participant}</TableCell>
+                  <TableCell className="w-12 py-0 pl-0">
+                    <div className="flex justify-left">
+                      {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
+                    </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-18 text-center">
                     {p.homeScore !== undefined && p.awayScore !== undefined
                       ? `${p.homeScore} - ${p.awayScore}`
                       : '-'}
