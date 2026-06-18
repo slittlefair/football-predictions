@@ -17,6 +17,7 @@ components:
         - played
         - jokersPlayed
         - pointsDifference
+        - correctResults
       properties:
         participant:
           type: string
@@ -40,6 +41,9 @@ components:
           type: integer
 
         pointsDifference:
+          type: integer
+
+        correctResults:
           type: integer
 
     Match:

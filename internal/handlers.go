@@ -22,10 +22,11 @@ func (t Tournament) matchLookup() map[int]*Match {
 }
 
 type PointsTallier struct {
-	Name          string
-	Points        int
-	CorrectScores int
-	JokersPlayed  int
+	Name           string
+	Points         int
+	CorrectScores  int
+	CorrectResults int
+	JokersPlayed   int
 }
 
 func sortPointsTallier(a, b *PointsTallier) int {
@@ -77,6 +78,8 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				curr.Points += score
 				if wasCorrect {
 					curr.CorrectScores++
+				} else if score != 0 {
+					curr.CorrectResults++
 				}
 				if !match.Date.Before(startOfToday) {
 					continue
@@ -104,6 +107,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 			leaderboard = append(leaderboard, gen.Leaderboard{
 				Participant:      v.Name,
 				CorrectScores:    v.CorrectScores,
+				CorrectResults:   v.CorrectResults,
 				Position:         i + 1,
 				TotalPoints:      v.Points,
 				PreviousPosition: previousPosition + 1,

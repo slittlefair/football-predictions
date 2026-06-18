@@ -9,6 +9,7 @@ import (
 
 // Leaderboard defines model for Leaderboard.
 type Leaderboard struct {
+	CorrectResults   int    `json:"correctResults"`
 	CorrectScores    int    `json:"correctScores"`
 	JokersPlayed     int    `json:"jokersPlayed"`
 	Participant      string `json:"participant"`

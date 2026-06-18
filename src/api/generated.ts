@@ -28,6 +28,7 @@ export interface Leaderboard {
   played: number;
   jokersPlayed: number;
   pointsDifference: number;
+  correctResults: number;
 }
 
 export interface Match {
