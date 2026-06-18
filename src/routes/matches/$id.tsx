@@ -47,6 +47,28 @@ function RouteComponent() {
     );
   }
 
+  if (isPending || !data) {
+    return (
+      <>
+        <div className="flex flex-col items-center w-full">
+          <div className="flex w-full mb-2">
+            <Button disabled variant="secondary" className="font-bold">
+              <Spinner data-icon="inline-start" />
+              Loading...
+            </Button>
+            <Button disabled variant="secondary" className="ml-auto font-bold">
+              Loading...
+              <Spinner data-icon="inline-end" />
+            </Button>
+          </div>
+        </div>
+        <Card className="flex flex-col items-center gap-2 p-4 min-w-120 h-91.5 justify-center">
+          <Spinner className="size-14" />
+        </Card>
+      </>
+    );
+  }
+
   const { match, predictions, previousNav, nextNav } = data;
 
   const sortedPredictions = predictions.sort((a, b) => {

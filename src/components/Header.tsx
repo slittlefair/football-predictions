@@ -14,55 +14,22 @@ import ThemeToggle from './ThemeToggle';
 export default function Header() {
   const { pathname } = useLocation();
   return (
-    <header className="border-b p-2 flex justify-between bg-white">
+    <header className="px-2 flex justify-between bg-popover">
       <NavigationMenu>
         <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              active={pathname === '/'}
-              render={<Link to="/" className="nav-link" />}
-            >
-              Home
-            </NavigationMenuLink>
+          <NavigationMenuItem active={pathname === '/'}>
+            <NavigationMenuLink render={<Link to="/" />}>Home</NavigationMenuLink>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={
-                <Link
-                  to="/matches"
-                  className="nav-link"
-                  activeProps={{ className: 'nav-link is-active' }}
-                />
-              }
-            >
-              Matches
-            </NavigationMenuLink>
+          <NavigationMenuItem active={pathname === '/matches'}>
+            <NavigationMenuLink render={<Link to="/matches" />}>Matches</NavigationMenuLink>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={
-                <Link
-                  to="/missingPredictions"
-                  className="nav-link"
-                  activeProps={{ className: 'nav-link is-active' }}
-                />
-              }
-            >
+          <NavigationMenuItem active={pathname === '/missingPredictions'}>
+            <NavigationMenuLink render={<Link to="/missingPredictions" />}>
               Missing Predictions
             </NavigationMenuLink>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              render={
-                <Link
-                  to="/tournament"
-                  className="nav-link"
-                  activeProps={{ className: 'nav-link is-active' }}
-                />
-              }
-            >
-              Tournament
-            </NavigationMenuLink>
+          <NavigationMenuItem active={pathname === '/tournament'}>
+            <NavigationMenuLink render={<Link to="/tournament" />}>Tournament</NavigationMenuLink>
           </NavigationMenuItem>
           <ParticipantsDropdown />
         </NavigationMenuList>
@@ -74,18 +41,20 @@ export default function Header() {
 
 const ParticipantsDropdown = () => {
   const { data: participants, isPending } = useParticipants();
+  const { pathname } = useLocation();
 
   if (isPending || !participants) {
     return null;
   }
 
   return (
-    <NavigationMenuItem>
+    <NavigationMenuItem active={pathname.includes('/participants')}>
       <NavigationMenuTrigger>Participants</NavigationMenuTrigger>
       <NavigationMenuContent>
         {participants.map(p => (
           <NavigationMenuItem
             key={p.name}
+            active={pathname.endsWith(p.name)}
             className={navigationMenuTriggerStyle()}
             render={<Link key={p.name} to="/participants/$name" params={{ name: p.name }} />}
           >
