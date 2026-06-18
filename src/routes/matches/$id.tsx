@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { type MatchNavigation, useGetMatch } from '@/api/generated';
 import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
-import { RouterButton } from '@/components/ui/button';
+import { Button, RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -25,7 +25,25 @@ function RouteComponent() {
   }
 
   if (isPending || !data?.data) {
-    return <Spinner className="size-8" />;
+    return (
+      <>
+        <div className="flex flex-col items-center w-full">
+          <div className="flex w-full mb-2">
+            <Button disabled variant="secondary" className="font-bold">
+              <Spinner data-icon="inline-start" />
+              Loading...
+            </Button>
+            <Button disabled variant="secondary" className="ml-auto font-bold">
+              Loading...
+              <Spinner data-icon="inline-end" />
+            </Button>
+          </div>
+        </div>
+        <Card className="flex flex-col items-center gap-2 p-4 min-w-120 h-91.5 justify-center">
+          <Spinner className="size-14" />
+        </Card>
+      </>
+    );
   }
 
   const { match, predictions, previousNav, nextNav } = data.data;
@@ -54,7 +72,7 @@ function RouteComponent() {
           />
         </div>
       )}
-      <Card className="flex flex-col items-center gap-2 p-4 min-w-md">
+      <Card className="flex flex-col items-center gap-2 p-4 min-w-120">
         <h3 className="scroll-m-20 text-lg font-semibold tracking-tight">
           {date} <span className="text-lg">●</span> {match.round}
         </h3>
