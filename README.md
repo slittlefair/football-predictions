@@ -6,36 +6,43 @@ TODO list:
   - [ ] AI?
 - [x] Warning on matches view when missing predictions
   - [x] in next 24 hours?
-- [ ] Style participants menu
-- [ ] Handle notFoundComponent error
-- [ ] Proper loading/error handling
-  - [ ] Suspense?
+- [x] Style participants menu
+- [x] Handle notFoundComponent error
+- [x] Proper loading/error handling
+  - [x] ~~Suspense?~~
 - [ ] Review structure of backend code
 - [x] Proper flag sizing
 - [ ] Style whole app
-  - [ ] Decide on colours/style
-  - [ ] Tailwind variables
-  - [ ] Header
-  - [ ] Buttons
-  - [ ] Tables
-  - [ ] Consistent page layout
-- [ ] Unnest data better ????
+  - [x] Decide on colours/style
+  - [x] Tailwind variables
+  - [x] Header
+  - [x] Buttons
+  - [x] Tables
+  - [x] Consistent page layout
+- [x] Unnest data better
 - [x] Countdown to next match
-- [ ] Use Tanstack tables
+- [x] ~~Use Tanstack tables~~ Probably won't do
 - [x] Style cells with flags
 - [x] Next/Previous match buttons
 - [x] Style match page
 - [x] Make all page centered
-- [ ] Consistent page headers
+- [x] Consistent page headers
 - [ ] Order predictions by scores, then names
 - [x] Handle jokers played in front end
 - [x] Show dates nicely
-- [x] ~Kits api?~ not avaiable, won't do
+- [x] ~~Kits api?~~ not avaiable, won't do
 - [ ] Check any old files/components that can be deleted
 - [ ] Proper README
 - [x] Center titles properly for matches
 - [ ] Scroll to next match
+- [x] Proper dark mode
+- [ ] Experiments pages
+  - [ ] 1-1
+  - [ ] 2-1
+  - [ ] Average
+  - [ ] Mode
+- [ ] Breadcrumbs
 - [ ] Page in nav for next match
   - [ ] And current match?
-- [ ] Show countdown on (next?) matches
+  - [ ] Show countdown on (next?) matches
 - [ ] Decide on next steps (db? logins? alternate backend/front end type consistency?)
