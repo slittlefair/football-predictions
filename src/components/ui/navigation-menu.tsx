@@ -13,7 +13,7 @@ function NavigationMenu({
     <NavigationMenuPrimitive.Root
       data-slot="navigation-menu"
       className={cn(
-        'group/navigation-menu relative flex h-10 max-w-max flex-1 items-center bg-white',
+        'group/navigation-menu relative flex h-10 max-w-max flex-1 items-center',
         className,
       )}
       {...props}
@@ -46,8 +46,8 @@ function NavigationMenuItem({
     <NavigationMenuPrimitive.Item
       data-slot="navigation-menu-item"
       className={cn(
-        'relative flex h-full items-center border-b-2 border-transparent hover:border-slate-500',
-        active && 'border-slate-500',
+        'relative flex h-full items-center border-b-2 border-transparent hover:border-menu-active',
+        active && 'border-menu-active',
         className,
       )}
       {...props}

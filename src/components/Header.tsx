@@ -14,7 +14,7 @@ import ThemeToggle from './ThemeToggle';
 export default function Header() {
   const { pathname } = useLocation();
   return (
-    <header className="px-2 flex justify-between bg-white">
+    <header className="px-2 flex justify-between bg-popover">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem active={pathname === '/'}>
