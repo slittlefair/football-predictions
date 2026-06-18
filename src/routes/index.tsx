@@ -2,9 +2,11 @@ import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useGetLeaderboard } from '@/api/generated';
+import { useLeaderboard } from '@/api/hooks';
+import { ErrorCard } from '@/components/ErrorCard';
 import { Card } from '@/components/ui/card';
 import { PageTitle } from '@/components/ui/pageTitle';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
   TableBody,
@@ -17,14 +19,16 @@ import {
 const queryClient = new QueryClient();
 
 const LeaderBoard = () => {
-  const { data } = useGetLeaderboard();
+  const { data: leaderboard, error, isPending } = useLeaderboard();
   const navigate = useNavigate();
 
-  if (!data?.data) {
-    return null;
+  if (error) {
+    return <ErrorCard error={error} />;
   }
 
-  const leaderboard = data.data;
+  if (isPending || !leaderboard) {
+    return <Spinner className="size-16" />;
+  }
 
   return (
     <div className="max-w-3xl">

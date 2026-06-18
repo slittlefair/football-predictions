@@ -3,8 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import type { ReactNode } from 'react';
-import { type MatchNavigation, useGetMatch } from '@/api/generated';
+import type { MatchNavigation } from '@/api/generated';
+import { useMatch } from '@/api/hooks';
 import Joker from '@/assets/joker.svg';
+import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { Button, RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -18,13 +20,13 @@ export const Route = createFileRoute('/matches/$id')({
 
 function RouteComponent() {
   const { id } = useParams({ from: '/matches/$id' });
-  const { data, isPending, error } = useGetMatch(Number(id));
+  const { data: matchData, isPending, error } = useMatch(id);
 
   if (error) {
-    return <div>{error}</div>;
+    return <ErrorCard error={error} />;
   }
 
-  if (isPending || !data?.data) {
+  if (isPending || !matchData) {
     return (
       <>
         <div className="flex flex-col items-center w-full">
@@ -46,7 +48,7 @@ function RouteComponent() {
     );
   }
 
-  const { match, predictions, previousNav, nextNav } = data.data;
+  const { match, predictions, previousNav, nextNav } = matchData;
 
   const sortedPredictions = predictions.sort((a, b) => {
     if (a.points === b.points) {

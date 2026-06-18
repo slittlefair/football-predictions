@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useGetParticipants } from '@/api/generated';
+import { useParticipants } from '@/api/hooks';
 import { FlagCell } from '@/components/FlagDisplay';
 import { Card } from '@/components/ui/card';
 import { PageTitle } from '@/components/ui/pageTitle';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
   TableBody,
@@ -17,12 +18,11 @@ export const Route = createFileRoute('/tournament')({
 });
 
 function RouteComponent() {
-  const { data: participantsData } = useGetParticipants();
-  if (!participantsData?.data) {
-    return null;
-  }
+  const { data: participants, isPending } = useParticipants();
 
-  const { data: participants } = participantsData;
+  if (isPending || !participants) {
+    return <Spinner className="size-16" />;
+  }
 
   return (
     <div className="p-3">

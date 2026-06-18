@@ -1,9 +1,11 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
-import { useGetMatches, useGetParticipant } from '@/api/generated';
+import { useMatches, useParticipant } from '@/api/hooks';
+import { ErrorCard } from '@/components/ErrorCard';
 import { FlagCell } from '@/components/FlagDisplay';
 import { MatchesList } from '@/components/MatchesList';
 import { Card } from '@/components/ui/card';
 import { PageTitle } from '@/components/ui/pageTitle';
+import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 export const Route = createFileRoute('/participants/$name')({
@@ -12,14 +14,21 @@ export const Route = createFileRoute('/participants/$name')({
 
 function RouteComponent() {
   const { name } = useParams({ from: '/participants/$name' });
-  const { data: participantResp } = useGetParticipant(name);
-  const { data: matchesResp } = useGetMatches();
+  const { data: matchesResp, isPending: matchesPending, error: matchesError } = useMatches();
+  const {
+    data: participant,
+    isPending: participantPending,
+    error: participantError,
+  } = useParticipant(name);
 
-  if (!participantResp?.data) {
-    return null;
+  if (participantPending || !participant) {
+    return <Spinner className="size-16" />;
   }
 
-  const participant = participantResp.data;
+  if (participantError || matchesError) {
+    return <ErrorCard error={participantError || matchesError} />;
+  }
+
   const { winner, runnerUp, thirdPlace, fourthPlace, topScorer, scorerNationality } =
     participant.tournamentPredictions;
 
@@ -53,9 +62,12 @@ function RouteComponent() {
         </Table>
       </Card>
 
-      {matchesResp && (
-        <MatchesList matches={matchesResp.data} predictions={participant.predictions} />
+      {matchesPending && (
+        <div className="flex justify-center p-4">
+          <Spinner className="size-16" />
+        </div>
       )}
+      {matchesResp && <MatchesList matches={matchesResp} predictions={participant.predictions} />}
     </div>
   );
 }

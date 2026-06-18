@@ -77,7 +77,10 @@ export const MatchesList = ({
                   {tableRow}
                   {missingPreds.length > 0 && (
                     <TRow>
-                      <TableCell colSpan={5} className="pl-3 text-red-600 font-bold">
+                      <TableCell
+                        colSpan={100}
+                        className="pl-3 text-red-600 font-bold hover:bg-white"
+                      >
                         Missing Predictions: {missingPreds.join(', ')}
                       </TableCell>
                     </TRow>
