@@ -34,14 +34,15 @@ const LeaderBoard = () => {
     <div className="max-w-3xl">
       <PageTitle>Leaderboard</PageTitle>
       <Card className="p-6">
-        <Table className="table-fixed w-fit">
+        <Table className="table-fixed w-fit justify-self-center">
           <TableHeader>
             <TableRow>
               <TableHead className="w-16" />
               <TableHead className="w-24" />
               <TableHead className="w-14">P</TableHead>
               <TableHead className="w-14">JR</TableHead>
-              <TableHead className="w-16">CS</TableHead>
+              <TableHead className="w-14">CS</TableHead>
+              <TableHead className="w-14">CR</TableHead>
               <TableHead className="w-20">Points</TableHead>
             </TableRow>
           </TableHeader>
@@ -69,6 +70,7 @@ const LeaderBoard = () => {
                   <TableCell>{p.played}</TableCell>
                   <TableCell>{3 - p.jokersPlayed}</TableCell>
                   <TableCell>{p.correctScores}</TableCell>
+                  <TableCell>{p.correctResults}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-lg">{p.totalPoints}</span> (+
@@ -83,7 +85,8 @@ const LeaderBoard = () => {
         <div className="text-sm">
           <strong>P</strong> = Played&nbsp;&nbsp;&nbsp;
           <strong>JR</strong> = Jokers Remaining&nbsp;&nbsp;&nbsp;
-          <strong>CS</strong> = Correct Scores
+          <strong>CS</strong> = Correct Scores&nbsp;&nbsp;&nbsp;
+          <strong>CR</strong> = Correct Results&nbsp;&nbsp;&nbsp;
         </div>
       </Card>
     </div>
