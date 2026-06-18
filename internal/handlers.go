@@ -109,6 +109,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				PreviousPosition: previousPosition + 1,
 				Played:           len(played),
 				JokersPlayed:     v.JokersPlayed,
+				PointsDifference: v.Points - previousPoints[previousPosition].Points,
 			})
 		}
 

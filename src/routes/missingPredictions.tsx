@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { addDays, endOfDay, isAfter, isBefore } from 'date-fns';
 import { useGetMatches, useGetParticipants } from '@/api/generated';
 import { MatchesList } from '@/components/MatchesList';
+import { PageTitle } from '@/components/ui/pageTitle';
 
 export const Route = createFileRoute('/missingPredictions')({
   component: RouteComponent,
@@ -37,5 +38,10 @@ function RouteComponent() {
     }
   }
 
-  return <MatchesList matches={filteredMatches} missingPredictions={missingPredictions} />;
+  return (
+    <div>
+      <PageTitle>Missing Predictions</PageTitle>
+      <MatchesList matches={filteredMatches} missingPredictions={missingPredictions} />
+    </div>
+  );
 }

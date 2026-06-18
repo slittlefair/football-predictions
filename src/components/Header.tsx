@@ -1,70 +1,67 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { useGetParticipants } from '@/api/generated';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
 import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
+  const { pathname } = useLocation();
   return (
-    <header className="z-50 border-b border-border px-4 backdrop-blur-lg">
-      <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
-        <div className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm font-semibold sm:order-0 sm:w-auto sm:flex-nowrap sm:pb-0">
-          <Link to="/" className="nav-link" activeProps={{ className: 'nav-link is-active' }}>
-            Home
-          </Link>
-          <Link
-            to="/matches"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
-          >
-            Matches
-          </Link>
-          <Link
-            to="/missingPredictions"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
-          >
-            Missing Predictions
-          </Link>
-          <Link
-            to="/tournament"
-            className="nav-link"
-            activeProps={{ className: 'nav-link is-active' }}
-          >
-            Tournament
-          </Link>
+    <header className="px-2 flex justify-between bg-popover">
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem active={pathname === '/'}>
+            <NavigationMenuLink render={<Link to="/" />}>Home</NavigationMenuLink>
+          </NavigationMenuItem>
+          <NavigationMenuItem active={pathname === '/matches'}>
+            <NavigationMenuLink render={<Link to="/matches" />}>Matches</NavigationMenuLink>
+          </NavigationMenuItem>
+          <NavigationMenuItem active={pathname === '/missingPredictions'}>
+            <NavigationMenuLink render={<Link to="/missingPredictions" />}>
+              Missing Predictions
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+          <NavigationMenuItem active={pathname === '/tournament'}>
+            <NavigationMenuLink render={<Link to="/tournament" />}>Tournament</NavigationMenuLink>
+          </NavigationMenuItem>
           <ParticipantsDropdown />
-        </div>
-
-        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <ThemeToggle />
-        </div>
-      </nav>
+        </NavigationMenuList>
+      </NavigationMenu>
+      <ThemeToggle />
     </header>
   );
 }
 
 const ParticipantsDropdown = () => {
   const { data } = useGetParticipants();
+  const { pathname } = useLocation();
 
   if (!data?.data) {
     return null;
   }
 
   return (
-    <details className="relative w-full sm:w-auto">
-      <summary className="nav-link list-none cursor-pointer">Participants</summary>
-
-      <div className="mt-2 min-w-56 rounded-xl border border-(--line) bg-green-100 p-2 shadow-lg sm:absolute sm:right-0">
+    <NavigationMenuItem active={pathname.includes('/participants')}>
+      <NavigationMenuTrigger>Participants</NavigationMenuTrigger>
+      <NavigationMenuContent>
         {data.data.map(p => (
-          <Link
+          <NavigationMenuItem
             key={p.name}
-            to="/participants/$name"
-            params={{ name: p.name }}
-            className="block rounded-lg px-3 py-2 text-sm text-green-700 no-underline transition hover:bg-green-700 hover:text-green-200"
+            active={pathname.endsWith(p.name)}
+            className={navigationMenuTriggerStyle()}
+            render={<Link key={p.name} to="/participants/$name" params={{ name: p.name }} />}
           >
             {p.name}
-          </Link>
+          </NavigationMenuItem>
         ))}
-      </div>
-    </details>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
   );
 };

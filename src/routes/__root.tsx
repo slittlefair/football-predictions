@@ -47,8 +47,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="font-sans antialiased wrap-anywhere flex flex-col h-dvh overflow-hidden">
         <Header />
-        <div className="flex-1 min-h-0 overflow-y-auto p-6 flex flex-col items-center">
-          <div className="w-full max-w-5xl my-0 mx-auto">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto p-6">
+          <div className="w-full max-w-5xl my-0 mx-auto flex flex-col items-center">{children}</div>
         </div>
         <TanStackDevtools
           config={{
