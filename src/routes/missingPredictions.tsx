@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { addDays, endOfDay, isAfter, isBefore } from 'date-fns';
 import { useMatches, useParticipants } from '@/api/hooks';
+import { ErrorCard } from '@/components/ErrorCard';
 import { MatchesList } from '@/components/MatchesList';
 import { PageTitle } from '@/components/ui/pageTitle';
 import { Spinner } from '@/components/ui/spinner';
@@ -14,15 +15,15 @@ function RouteComponent() {
   const {
     data: participants,
     isPending: participantsPending,
-    error: partisipantsError,
+    error: participantsError,
   } = useParticipants();
 
   if (matchesPending || participantsPending || !matches || !participants) {
     return <Spinner className="size-16" />;
   }
 
-  if (matchesError || partisipantsError) {
-    return <p>Error</p>;
+  if (matchesError || participantsError) {
+    return <ErrorCard error={matchesError || participantsError} />;
   }
 
   const now = new Date();

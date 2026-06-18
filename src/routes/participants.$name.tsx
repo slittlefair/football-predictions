@@ -1,5 +1,6 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import { useMatches, useParticipant } from '@/api/hooks';
+import { ErrorCard } from '@/components/ErrorCard';
 import { FlagCell } from '@/components/FlagDisplay';
 import { MatchesList } from '@/components/MatchesList';
 import { Card } from '@/components/ui/card';
@@ -25,7 +26,7 @@ function RouteComponent() {
   }
 
   if (participantError || matchesError) {
-    return <div>Error</div>;
+    return <ErrorCard error={participantError || matchesError} />;
   }
 
   const { winner, runnerUp, thirdPlace, fourthPlace, topScorer, scorerNationality } =

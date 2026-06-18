@@ -1,4 +1,5 @@
 import { useTeams } from '@/api/hooks';
+import { ErrorCard } from '@/components/ErrorCard';
 import { Spinner } from '@/components/ui/spinner';
 import { TableCell } from '@/components/ui/table';
 
@@ -15,7 +16,7 @@ export const FlagDisplay = ({
 }: IFlagDisplayProps) => {
   const { data: teams, error } = useTeams();
   if (error) {
-    return <div>Error</div>;
+    return <ErrorCard error={error} />;
   }
 
   if (!teams) {

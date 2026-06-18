@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import type { MatchNavigation } from '@/api/generated';
 import { useMatch } from '@/api/hooks';
 import Joker from '@/assets/joker.svg';
+import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { Button, RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,13 +20,13 @@ export const Route = createFileRoute('/matches/$id')({
 
 function RouteComponent() {
   const { id } = useParams({ from: '/matches/$id' });
-  const { data, isPending, error } = useMatch(id);
+  const { data: matchData, isPending, error } = useMatch(id);
 
   if (error) {
-    return <div>{error}</div>;
+    return <ErrorCard error={error} />;
   }
 
-  if (isPending || !data) {
+  if (isPending || !matchData) {
     return (
       <>
         <div className="flex flex-col items-center w-full">
@@ -47,29 +48,7 @@ function RouteComponent() {
     );
   }
 
-  if (isPending || !data) {
-    return (
-      <>
-        <div className="flex flex-col items-center w-full">
-          <div className="flex w-full mb-2">
-            <Button disabled variant="secondary" className="font-bold">
-              <Spinner data-icon="inline-start" />
-              Loading...
-            </Button>
-            <Button disabled variant="secondary" className="ml-auto font-bold">
-              Loading...
-              <Spinner data-icon="inline-end" />
-            </Button>
-          </div>
-        </div>
-        <Card className="flex flex-col items-center gap-2 p-4 min-w-120 h-91.5 justify-center">
-          <Spinner className="size-14" />
-        </Card>
-      </>
-    );
-  }
-
-  const { match, predictions, previousNav, nextNav } = data;
+  const { match, predictions, previousNav, nextNav } = matchData;
 
   const sortedPredictions = predictions.sort((a, b) => {
     if (a.points === b.points) {

@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useLeaderboard } from '@/api/hooks';
+import { ErrorCard } from '@/components/ErrorCard';
 import { Card } from '@/components/ui/card';
 import { PageTitle } from '@/components/ui/pageTitle';
 import { Spinner } from '@/components/ui/spinner';
@@ -22,7 +23,7 @@ const LeaderBoard = () => {
   const navigate = useNavigate();
 
   if (error) {
-    return <div>Error</div>;
+    return <ErrorCard error={error} />;
   }
 
   if (isPending || !leaderboard) {
