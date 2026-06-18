@@ -122,7 +122,9 @@ function RouteComponent() {
                       ? `${p.homeScore} - ${p.awayScore}`
                       : '-'}
                   </TableCell>
-                  {match.hasResult && <TableCell>{p.points}</TableCell>}
+                  {match.hasResult && (
+                    <TableCell className="w-12 text-center">{p.points}</TableCell>
+                  )}
                 </TableRow>
               );
             })}
