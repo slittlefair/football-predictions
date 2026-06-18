@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router';
-import { useGetParticipants } from '@/api/generated';
+import { useParticipants } from '@/api/hooks';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -20,7 +20,6 @@ export default function Header() {
           <NavigationMenuItem>
             <NavigationMenuLink
               active={pathname === '/'}
-              className={navigationMenuTriggerStyle()}
               render={<Link to="/" className="nav-link" />}
             >
               Home
@@ -28,7 +27,6 @@ export default function Header() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink
-              // className={navigationMenuTriggerStyle()}
               render={
                 <Link
                   to="/matches"
@@ -42,7 +40,6 @@ export default function Header() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink
-              className={navigationMenuTriggerStyle()}
               render={
                 <Link
                   to="/missingPredictions"
@@ -56,7 +53,6 @@ export default function Header() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink
-              className={navigationMenuTriggerStyle()}
               render={
                 <Link
                   to="/tournament"
@@ -77,9 +73,9 @@ export default function Header() {
 }
 
 const ParticipantsDropdown = () => {
-  const { data } = useGetParticipants();
+  const { data: participants, isPending } = useParticipants();
 
-  if (!data?.data) {
+  if (isPending || !participants) {
     return null;
   }
 
@@ -87,7 +83,7 @@ const ParticipantsDropdown = () => {
     <NavigationMenuItem>
       <NavigationMenuTrigger>Participants</NavigationMenuTrigger>
       <NavigationMenuContent>
-        {data.data.map(p => (
+        {participants.map(p => (
           <NavigationMenuItem
             key={p.name}
             className={navigationMenuTriggerStyle()}

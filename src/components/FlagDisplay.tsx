@@ -1,4 +1,5 @@
-import { useGetTeams } from '@/api/generated';
+import { useTeams } from '@/api/hooks';
+import { Spinner } from '@/components/ui/spinner';
 import { TableCell } from '@/components/ui/table';
 
 interface IFlagDisplayProps {
@@ -12,12 +13,25 @@ export const FlagDisplay = ({
   teamOverride,
   flagPosition = 'right',
 }: IFlagDisplayProps) => {
-  const { data: resp } = useGetTeams();
-  if (!resp) {
-    return null;
+  const { data: teams, error } = useTeams();
+  if (error) {
+    return <div>Error</div>;
   }
 
-  const team = resp.data.find(t => t.displayName === (teamOverride || displayName));
+  if (!teams) {
+    return (
+      <div className={`flex gap-2 items-center ${flagPosition === 'left' && 'flex-row-reverse'}`}>
+        {displayName}{' '}
+        <div className="h-6 w-9 bg-gray-200">
+          <div className="h-full w-full object-cover flex justify-center items-center">
+            <Spinner />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const team = teams.find(t => t.displayName === (teamOverride || displayName));
 
   if (!team) {
     return <>{displayName}</>;
