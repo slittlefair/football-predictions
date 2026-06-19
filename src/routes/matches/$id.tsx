@@ -215,18 +215,28 @@ function RouteComponent() {
         ) : (
           <Spinner className="size-16" />
         )}
-        <FormDialog match={match} participantNames={participantNames} />
+        <FormDialog match={match} missingPredictions={missingPredictions} />
       </Card>
     </div>
   );
 }
 
-const FormDialog = ({ participantNames, match }: { participantNames?: string[]; match: Match }) => {
+const FormDialog = ({
+  missingPredictions,
+  match,
+}: {
+  missingPredictions?: string[];
+  match: Match;
+}) => {
   const { id } = useParams({ from: '/matches/$id' });
   const [participant, setParticipant] = useState<string | null>('');
   const [homeScore, setHomeScore] = useState<string>();
   const [awayScore, setAwayScore] = useState<string>();
   const [playedJoker, setPlayedJoker] = useState(false);
+
+  if (match.hasResult || !missingPredictions || missingPredictions.length === 0) {
+    return null;
+  }
 
   const handleSubmitPrediction = (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -260,7 +270,7 @@ const FormDialog = ({ participantNames, match }: { participantNames?: string[]; 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {participantNames?.map(p => (
+                    {missingPredictions?.map(p => (
                       <SelectItem key={p} value={p}>
                         {p}
                       </SelectItem>
