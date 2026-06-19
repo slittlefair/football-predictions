@@ -58,11 +58,10 @@ type Participant struct {
 
 // ParticipantPrediction defines model for ParticipantPrediction.
 type ParticipantPrediction struct {
-	AwayScore   int    `json:"awayScore"`
-	HomeScore   int    `json:"homeScore"`
-	MatchId     int    `json:"matchId"`
-	Participant string `json:"participant"`
-	PlayedJoker *bool  `json:"playedJoker,omitempty"`
+	AwayScore   int   `json:"awayScore"`
+	HomeScore   int   `json:"homeScore"`
+	MatchId     int   `json:"matchId"`
+	PlayedJoker *bool `json:"playedJoker,omitempty"`
 }
 
 // Prediction defines model for Prediction.
@@ -92,11 +91,17 @@ type TournamentPredictions struct {
 	Winner            string `json:"winner"`
 }
 
+// SaveParticipantPredictionsJSONBody defines parameters for SaveParticipantPredictions.
+type SaveParticipantPredictionsJSONBody = []ParticipantPrediction
+
 // GetPredictionsParams defines parameters for GetPredictions.
 type GetPredictionsParams struct {
 	MatchId     *int    `form:"matchId,omitempty" json:"matchId,omitempty"`
 	Participant *string `form:"participant,omitempty" json:"participant,omitempty"`
 }
+
+// SaveParticipantPredictionsJSONRequestBody defines body for SaveParticipantPredictions for application/json ContentType.
+type SaveParticipantPredictionsJSONRequestBody = SaveParticipantPredictionsJSONBody
 
 // CreatePredictionJSONRequestBody defines body for CreatePrediction for application/json ContentType.
 type CreatePredictionJSONRequestBody = ParticipantPrediction

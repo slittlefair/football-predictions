@@ -339,8 +339,12 @@ func (t *Tournament) predictionsHandler() http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			t.getPredictions(w, r)
+			// TODO remove when put in place
 		case http.MethodPost:
 			t.createPredictionHandler(w, r)
+		case http.MethodPut:
+			t.savePredictionsHandler(w, r)
+
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -378,8 +382,7 @@ func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	existing := t.filterPredictions(&gen.GetPredictionsParams{
-		MatchId:     &prediction.MatchId,
-		Participant: &prediction.Participant,
+		MatchId: &prediction.MatchId,
 	})
 
 	if len(existing) > 0 {
@@ -389,11 +392,10 @@ func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Requ
 
 	// TODO savePrediction
 	t.Predictions = append(t.Predictions, &Prediction{
-		ID:          prediction.MatchId,
-		Participant: prediction.Participant,
-		HomeScore:   prediction.HomeScore,
-		AwayScore:   prediction.AwayScore,
-		Joker:       *prediction.PlayedJoker,
+		ID:        prediction.MatchId,
+		HomeScore: prediction.HomeScore,
+		AwayScore: prediction.AwayScore,
+		Joker:     *prediction.PlayedJoker,
 	})
 
 	t.savePredictions()
@@ -402,6 +404,60 @@ func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(prediction); err != nil {
+		log.Printf("failed to write response: %v", err)
+	}
+}
+
+func (t *Tournament) savePredictionsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var predictions []gen.ParticipantPrediction
+
+	if err := json.NewDecoder(r.Body).Decode(&predictions); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	participant := r.PathValue("participant")
+
+	for _, p := range predictions {
+		var joker bool
+		if p.PlayedJoker != nil {
+			joker = *p.PlayedJoker
+		}
+		var updated bool
+		for _, tp := range t.Predictions {
+			if tp.Participant != participant {
+				continue
+			}
+			if tp.ID == p.MatchId {
+				tp.HomeScore = p.HomeScore
+				tp.AwayScore = p.AwayScore
+				tp.Joker = joker
+				updated = true
+				break
+			}
+		}
+		if !updated {
+			t.Predictions = append(t.Predictions, &Prediction{
+				ID:          p.MatchId,
+				HomeScore:   p.HomeScore,
+				AwayScore:   p.AwayScore,
+				Joker:       joker,
+				Participant: participant,
+			})
+		}
+	}
+
+	t.savePredictions()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(predictions); err != nil {
 		log.Printf("failed to write response: %v", err)
 	}
 }
@@ -470,6 +526,9 @@ func (t *Tournament) savePredictions() error {
 
 	for _, p := range t.Predictions {
 		match := t.findMatch(p.ID)
+		if match == nil {
+			continue
+		}
 		predictions = append(predictions, &csvPrediction{
 			Participant: p.Participant,
 			ID:          p.ID,

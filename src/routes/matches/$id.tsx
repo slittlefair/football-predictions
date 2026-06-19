@@ -243,7 +243,6 @@ const FormDialog = ({
 
     createPrediction({
       matchId: Number(id),
-      participant: participant || '',
       homeScore: Number(homeScore),
       awayScore: Number(awayScore),
       playedJoker,

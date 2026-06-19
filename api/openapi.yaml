@@ -224,15 +224,11 @@ components:
     ParticipantPrediction:
       type: object
       required:
-        - participant
         - matchId
         - homeScore
         - awayScore
 
       properties:
-        participant:
-          type: string
-
         matchId:
           type: integer
 
@@ -386,3 +382,29 @@ paths:
                 $ref: "#/components/schemas/ParticipantPrediction"
         "409":
           description: Prediction for this match and participant already exists
+  
+  /api/participants/{participant}/predictions:
+    put:
+      operationId: saveParticipantPredictions
+      summary: Save a number of predictions for a participant
+      parameters:
+        - name: participant
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/ParticipantPrediction"
+      responses:
+        "201":
+          description: Predictions created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prediction"

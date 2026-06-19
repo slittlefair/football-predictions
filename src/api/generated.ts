@@ -94,7 +94,6 @@ export interface Team {
 }
 
 export interface ParticipantPrediction {
-  participant: string;
   matchId: number;
   homeScore: number;
   awayScore: number;
@@ -1061,4 +1060,94 @@ export const useCreatePrediction = <TError = void,
         TContext
       > => {
       return useMutation(getCreatePredictionMutationOptions(options), queryClient);
+    }
+
+export type saveParticipantPredictionsResponse201 = {
+  data: Prediction
+  status: 201
+}
+
+export type saveParticipantPredictionsResponseSuccess = (saveParticipantPredictionsResponse201) & {
+  headers: Headers;
+};
+;
+
+export type saveParticipantPredictionsResponse = (saveParticipantPredictionsResponseSuccess)
+
+export const getSaveParticipantPredictionsUrl = (participant: string,) => {
+
+
+
+
+  return `/api/participants/${participant}/predictions`
+}
+
+/**
+ * @summary Save a number of predictions for a participant
+ */
+export const saveParticipantPredictions = async (participant: string,
+    participantPrediction: ParticipantPrediction[], options?: RequestInit): Promise<saveParticipantPredictionsResponse> => {
+
+  const res = await fetch(getSaveParticipantPredictionsUrl(participant),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(participantPrediction)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: saveParticipantPredictionsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as saveParticipantPredictionsResponse
+}
+
+
+
+
+export const getSaveParticipantPredictionsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveParticipantPredictions>>, TError,{participant: string;data: ParticipantPrediction[]}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof saveParticipantPredictions>>, TError,{participant: string;data: ParticipantPrediction[]}, TContext> => {
+
+const mutationKey = ['saveParticipantPredictions'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveParticipantPredictions>>, {participant: string;data: ParticipantPrediction[]}> = (props) => {
+          const {participant,data} = props ?? {};
+
+          return  saveParticipantPredictions(participant,data,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveParticipantPredictionsMutationResult = NonNullable<Awaited<ReturnType<typeof saveParticipantPredictions>>>
+    export type SaveParticipantPredictionsMutationBody = ParticipantPrediction[]
+    export type SaveParticipantPredictionsMutationError = unknown
+
+    /**
+ * @summary Save a number of predictions for a participant
+ */
+export const useSaveParticipantPredictions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveParticipantPredictions>>, TError,{participant: string;data: ParticipantPrediction[]}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveParticipantPredictions>>,
+        TError,
+        {participant: string;data: ParticipantPrediction[]},
+        TContext
+      > => {
+      return useMutation(getSaveParticipantPredictionsMutationOptions(options), queryClient);
     }
