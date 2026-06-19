@@ -1,13 +1,16 @@
 import {
+  type GetPredictionsParams,
   type Leaderboard,
   type Match,
   type Participant,
+  type Prediction,
   type Team,
   useGetLeaderboard,
   useGetMatch,
   useGetMatches,
   useGetParticipant,
   useGetParticipants,
+  useGetPredictions,
   useGetTeams,
 } from '@/api/generated';
 
@@ -33,3 +36,6 @@ export const useParticipant = (name: string) =>
   useGetParticipant(name, { query: { select: resp => resp.data } });
 
 export const useTeams = () => useGetTeams(createQuery<Team[]>());
+
+export const usePredictions = (params?: GetPredictionsParams) =>
+  useGetPredictions(params, createQuery<Prediction[]>());

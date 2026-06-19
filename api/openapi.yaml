@@ -129,6 +129,8 @@ components:
         - id
         - participant
         - points
+        - homeScore
+        - awayScore
         - hasResult
       properties:
         id:
@@ -216,6 +218,30 @@ components:
 
         code:
           type: string
+
+    ParticipantPrediction:
+      type: object
+      required:
+        - participant
+        - matchId
+        - homeScore
+        - awayScore
+
+      properties:
+        participant:
+          type: string
+
+        matchId:
+          type: integer
+
+        homeScore:
+          type: integer
+
+        awayScore:
+          type: integer
+
+        playedJoker:
+          type: boolean
 
 
 paths:
@@ -315,3 +341,44 @@ paths:
                 items:
                   $ref: "#/components/schemas/Team"
                   
+  /api/predictions:
+    get:
+      operationId: getPredictions
+      summary: Get predictions (optionally filtered for match or participant)
+      parameters:
+        - name: matchId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: participant
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of predictions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prediction"
+          
+    post:
+      operationId: createPrediction
+      summary: Enter a prediction for a participant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParticipantPrediction"
+      responses:
+        "201":
+          description: Prediction Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantPrediction"

@@ -1,15 +1,37 @@
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faWarning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
-import type { ReactNode } from 'react';
-import type { MatchNavigation } from '@/api/generated';
-import { useMatch } from '@/api/hooks';
+import { type ReactNode, useState } from 'react';
+import { createPrediction, type Match } from '@/api/generated';
+import { useMatches, useParticipants, usePredictions } from '@/api/hooks';
 import Joker from '@/assets/joker.svg';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { Button, RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Field, FieldGroup } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/utils/date';
@@ -20,13 +42,25 @@ export const Route = createFileRoute('/matches/$id')({
 
 function RouteComponent() {
   const { id } = useParams({ from: '/matches/$id' });
-  const { data: matchData, isPending, error } = useMatch(id);
+  const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
+  const {
+    data: predictions,
+    isPending: predictionsPending,
+    error: predictionsError,
+  } = usePredictions({ matchId: Number(id) });
+  const {
+    data: participants,
+    isPending: participantsPending,
+    error: participantsError,
+  } = useParticipants();
 
+  const error = matchesError || predictionsError || participantsError;
   if (error) {
     return <ErrorCard error={error} />;
   }
 
-  if (isPending || !matchData) {
+  const isPending = matchesPending || predictionsPending || participantsPending;
+  if (isPending || !matches) {
     return (
       <>
         <div className="flex flex-col items-center w-full">
@@ -48,23 +82,22 @@ function RouteComponent() {
     );
   }
 
-  const { match, predictions, previousNav, nextNav } = matchData;
+  const matchIdx = matches?.findIndex(m => m.id === Number(id));
+  if (matchIdx === -1) {
+    return <ErrorCard error={new Error('match not found')} />;
+  }
 
-  const sortedPredictions = predictions.sort((a, b) => {
-    // Sort unpredicted to the bottom
-    const aPredicted = a.homeScore !== undefined && a.awayScore !== undefined;
-    const bPredicted = b.homeScore !== undefined && b.awayScore !== undefined;
+  const match = matches[matchIdx];
+  const previousMatch = matchIdx !== 0 ? matches[matchIdx - 1] : undefined;
+  const nextMatch = matchIdx !== matches.length ? matches[matchIdx + 1] : undefined;
 
-    if (!(aPredicted && bPredicted)) {
-      if (!aPredicted && bPredicted) {
-        return 1;
-      }
-      if (aPredicted && !bPredicted) {
-        return -1;
-      }
-      return a.participant.localeCompare(b.participant);
-    }
+  const participantNames = participants?.map(p => p.name);
 
+  const missingPredictions = participantNames?.filter(
+    pn => !predictions?.find(p => p.participant === pn),
+  );
+
+  const sortedPredictions = predictions?.sort((a, b) => {
     // If we have points, order by who scored the most
     if (a.points !== b.points) {
       return b.points - a.points;
@@ -75,16 +108,17 @@ function RouteComponent() {
       return a.participant.localeCompare(b.participant);
     }
 
-    // Next order by homeScore, highest first
-    if (a.homeScore !== undefined && b.homeScore !== undefined && a.homeScore !== b.homeScore) {
-      return b.homeScore - a.homeScore;
-    }
-    // Then order by awayScore, lowest first
-    if (a.awayScore !== undefined && b.awayScore !== undefined && a.awayScore !== b.awayScore) {
-      return a.awayScore - b.awayScore;
+    const aDiff = a.homeScore - a.awayScore;
+    const bDiff = b.homeScore - b.awayScore;
+
+    if (aDiff !== bDiff) {
+      return bDiff - aDiff;
     }
 
-    // Equal predictions just sort by name
+    if (a.homeScore !== b.homeScore) {
+      return b.homeScore - a.homeScore;
+    }
+
     return a.participant.localeCompare(b.participant);
   });
 
@@ -92,15 +126,15 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col items-center w-full">
-      {(previousNav || nextNav) && (
+      {(nextMatch || previousMatch) && (
         <div className="flex w-full mb-2">
           <NavButton
-            navItem={previousNav}
+            match={previousMatch}
             className="font-bold"
             leftIcon={<FontAwesomeIcon icon={faChevronLeft} />}
           />
           <NavButton
-            navItem={nextNav}
+            match={nextMatch}
             className="ml-auto font-bold"
             rightIcon={<FontAwesomeIcon icon={faChevronRight} />}
           />
@@ -124,67 +158,172 @@ function RouteComponent() {
           </div>
         </div>
 
-        <Table className="w-fit m-auto">
-          <TableBody>
-            {sortedPredictions.map(p => {
-              const state = !match.hasResult
-                ? 'none'
-                : p.points === 0
-                  ? 'red'
-                  : p.points < 3
-                    ? 'orange'
-                    : 'green';
-              return (
+        {sortedPredictions && missingPredictions ? (
+          <Table className="w-fit m-auto">
+            <TableBody>
+              {sortedPredictions.map(p => {
+                const state = !match.hasResult
+                  ? 'none'
+                  : p.points === 0
+                    ? 'red'
+                    : p.points < 3
+                      ? 'orange'
+                      : 'green';
+                return (
+                  <TableRow
+                    key={p.participant}
+                    className={classNames({
+                      'bg-red-400 hover:bg-red-400': state === 'red',
+                      'bg-yellow-400 hover:bg-yellow-400': state === 'orange',
+                      'bg-emerald-400 hover:bg-emerald-400': state === 'green',
+                    })}
+                  >
+                    <TableCell className="w-18 pl-4">{p.participant}</TableCell>
+                    <TableCell className="w-12 py-0 pl-0">
+                      <div className="flex justify-left">
+                        {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-18 text-center">
+                      {p.homeScore !== undefined && p.awayScore !== undefined
+                        ? `${p.homeScore} - ${p.awayScore}`
+                        : '-'}
+                    </TableCell>
+                    {match.hasResult && (
+                      <TableCell className="w-12 text-center">{p.points}</TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
+              {missingPredictions.map(p => (
                 <TableRow
-                  key={p.participant}
+                  key={p}
                   className={classNames({
-                    'bg-red-400 hover:bg-red-400': state === 'red',
-                    'bg-yellow-400 hover:bg-yellow-400': state === 'orange',
-                    'bg-emerald-400 hover:bg-emerald-400': state === 'green',
+                    'bg-red-400 hover:bg-red-400': match.hasResult,
                   })}
                 >
-                  <TableCell className="w-18 pl-4">{p.participant}</TableCell>
-                  <TableCell className="w-12 py-0 pl-0">
-                    <div className="flex justify-left">
-                      {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
-                    </div>
-                  </TableCell>
+                  <TableCell className="w-18 pl-4">{p}</TableCell>
+                  <TableCell className="w-12 py-0 pl-0" />
                   <TableCell className="w-18 text-center">
-                    {p.homeScore !== undefined && p.awayScore !== undefined
-                      ? `${p.homeScore} - ${p.awayScore}`
-                      : '-'}
+                    <FontAwesomeIcon className="text-red-600" icon={faWarning} />
                   </TableCell>
-                  {match.hasResult && (
-                    <TableCell className="w-12 text-center">{p.points}</TableCell>
-                  )}
+                  {match.hasResult && <TableCell className="w-12 text-center">0</TableCell>}
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <Spinner className="size-16" />
+        )}
+        <FormDialog match={match} participantNames={participantNames} />
       </Card>
     </div>
   );
 }
 
+const FormDialog = ({ participantNames, match }: { participantNames?: string[]; match: Match }) => {
+  const { id } = useParams({ from: '/matches/$id' });
+  const [participant, setParticipant] = useState<string | null>('');
+  const [homeScore, setHomeScore] = useState<string>();
+  const [awayScore, setAwayScore] = useState<string>();
+  const [playedJoker, setPlayedJoker] = useState(false);
+
+  const handleSubmitPrediction = (e: React.SubmitEvent) => {
+    e.preventDefault();
+
+    createPrediction({
+      matchId: Number(id),
+      participant: participant || '',
+      homeScore: Number(homeScore),
+      awayScore: Number(awayScore),
+      playedJoker,
+    });
+  };
+
+  const formValid = !!participant && Number(homeScore) >= 0 && Number(awayScore) >= 0;
+
+  return (
+    <Dialog>
+      <DialogTrigger render={<Button>Add prediction</Button>} />
+      <DialogContent>
+        <form onSubmit={handleSubmitPrediction}>
+          <DialogHeader>
+            <DialogTitle>Add prediction</DialogTitle>
+            <DialogDescription>Some description here</DialogDescription>
+          </DialogHeader>
+          <FieldGroup>
+            <Field>
+              <Label htmlFor="participant">Participant</Label>
+              <Select id="participant" onValueChange={setParticipant}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a participant" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {participantNames?.map(p => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+            <div className="flex gap-4">
+              <Field>
+                <Label htmlFor="homeScore">
+                  <FlagDisplay displayName={match.homeTeam} />
+                </Label>
+                <Input
+                  id="homeScore"
+                  type="number"
+                  min="0"
+                  aria-invalid={Number(homeScore) < 0}
+                  onChange={e => setHomeScore(e.target.value)}
+                />
+              </Field>
+              <Field>
+                <Label htmlFor="awayScore">
+                  <FlagDisplay displayName={match.awayTeam} />
+                </Label>
+                <Input id="awayScore" type="number" onChange={e => setAwayScore(e.target.value)} />
+              </Field>
+            </div>
+            <Field orientation="horizontal">
+              <Checkbox id="joker" name="joker" onCheckedChange={e => setPlayedJoker(e)} />
+              <Label htmlFor="joker">Play Joker</Label>
+            </Field>
+          </FieldGroup>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline">Cancel</Button>} />
+            <Button type="submit" disabled={!formValid}>
+              Save
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const NavButton = ({
-  navItem,
+  match,
   className,
   leftIcon,
   rightIcon,
 }: {
-  navItem?: MatchNavigation;
+  match?: Match;
   className?: string;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
 }) => {
-  if (!navItem) {
+  if (!match) {
     return null;
   }
   return (
-    <RouterButton to="/matches/$id" params={{ id: String(navItem.id) }} className={className}>
+    <RouterButton to="/matches/$id" params={{ id: String(match.id) }} className={className}>
       {leftIcon}
-      {navItem.homeTeam} v {navItem.awayTeam}
+      {match.homeTeam} v {match.awayTeam}
       {rightIcon}
     </RouterButton>
   );

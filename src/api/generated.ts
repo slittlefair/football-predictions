@@ -5,16 +5,20 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
@@ -54,8 +58,8 @@ export interface Prediction {
   id: number;
   participant: string;
   points: number;
-  homeScore?: number;
-  awayScore?: number;
+  homeScore: number;
+  awayScore: number;
   usedJoker?: boolean;
   hasResult: boolean;
 }
@@ -88,6 +92,19 @@ export interface Team {
   displayName: string;
   code: string;
 }
+
+export interface ParticipantPrediction {
+  participant: string;
+  matchId: number;
+  homeScore: number;
+  awayScore: number;
+  playedJoker?: boolean;
+}
+
+export type GetPredictionsParams = {
+matchId?: number;
+participant?: string;
+};
 
 export type getLeaderboardResponse200 = {
   data: Leaderboard[]
@@ -816,3 +833,225 @@ export function useGetTeams<TData = Awaited<ReturnType<typeof getTeams>>, TError
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+
+
+
+
+
+
+export type getPredictionsResponse200 = {
+  data: Prediction[]
+  status: 200
+}
+
+export type getPredictionsResponseSuccess = (getPredictionsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getPredictionsResponse = (getPredictionsResponseSuccess)
+
+export const getGetPredictionsUrl = (params?: GetPredictionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/predictions?${stringifiedParams}` : `/api/predictions`
+}
+
+/**
+ * @summary Get predictions (optionally filtered for match or participant)
+ */
+export const getPredictions = async (params?: GetPredictionsParams, options?: RequestInit): Promise<getPredictionsResponse> => {
+
+  const res = await fetch(getGetPredictionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getPredictionsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getPredictionsResponse
+}
+
+
+
+
+
+export const getGetPredictionsQueryKey = (params?: GetPredictionsParams,) => {
+    return [
+    `/api/predictions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPredictionsQueryOptions = <TData = Awaited<ReturnType<typeof getPredictions>>, TError = unknown>(params?: GetPredictionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPredictions>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPredictionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPredictions>>> = ({ signal }) => getPredictions(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPredictions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPredictionsQueryResult = NonNullable<Awaited<ReturnType<typeof getPredictions>>>
+export type GetPredictionsQueryError = unknown
+
+
+export function useGetPredictions<TData = Awaited<ReturnType<typeof getPredictions>>, TError = unknown>(
+ params: undefined |  GetPredictionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPredictions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPredictions>>,
+          TError,
+          Awaited<ReturnType<typeof getPredictions>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPredictions<TData = Awaited<ReturnType<typeof getPredictions>>, TError = unknown>(
+ params?: GetPredictionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPredictions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPredictions>>,
+          TError,
+          Awaited<ReturnType<typeof getPredictions>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPredictions<TData = Awaited<ReturnType<typeof getPredictions>>, TError = unknown>(
+ params?: GetPredictionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPredictions>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get predictions (optionally filtered for match or participant)
+ */
+
+export function useGetPredictions<TData = Awaited<ReturnType<typeof getPredictions>>, TError = unknown>(
+ params?: GetPredictionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPredictions>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPredictionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export type createPredictionResponse201 = {
+  data: ParticipantPrediction
+  status: 201
+}
+
+export type createPredictionResponseSuccess = (createPredictionResponse201) & {
+  headers: Headers;
+};
+;
+
+export type createPredictionResponse = (createPredictionResponseSuccess)
+
+export const getCreatePredictionUrl = () => {
+
+
+
+
+  return `/api/predictions`
+}
+
+/**
+ * @summary Enter a prediction for a participant
+ */
+export const createPrediction = async (participantPrediction: ParticipantPrediction, options?: RequestInit): Promise<createPredictionResponse> => {
+
+  const res = await fetch(getCreatePredictionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(participantPrediction)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createPredictionResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as createPredictionResponse
+}
+
+
+
+
+export const getCreatePredictionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrediction>>, TError,{data: ParticipantPrediction}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof createPrediction>>, TError,{data: ParticipantPrediction}, TContext> => {
+
+const mutationKey = ['createPrediction'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPrediction>>, {data: ParticipantPrediction}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPrediction(data,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePredictionMutationResult = NonNullable<Awaited<ReturnType<typeof createPrediction>>>
+    export type CreatePredictionMutationBody = ParticipantPrediction
+    export type CreatePredictionMutationError = unknown
+
+    /**
+ * @summary Enter a prediction for a participant
+ */
+export const useCreatePrediction = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrediction>>, TError,{data: ParticipantPrediction}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPrediction>>,
+        TError,
+        {data: ParticipantPrediction},
+        TContext
+      > => {
+      return useMutation(getCreatePredictionMutationOptions(options), queryClient);
+    }
