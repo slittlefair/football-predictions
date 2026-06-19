@@ -166,11 +166,13 @@ components:
         name:
           type: string
 
+        # TODO DELETE?
         predictions:
           type: array
           items:
             $ref: "#/components/schemas/Prediction"
 
+        # TODO Move this?
         tournamentPredictions:
           $ref: "#/components/schemas/TournamentPredictions"
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"footballpredictions/api/gen"
 	"log"
 	"net/http"
@@ -366,7 +365,6 @@ func (t *Tournament) getPredictions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("HERE")
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -397,6 +395,8 @@ func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Requ
 		AwayScore:   prediction.AwayScore,
 		Joker:       *prediction.PlayedJoker,
 	})
+
+	t.savePredictions()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -457,4 +457,29 @@ func (t *Tournament) filterPredictions(params *gen.GetPredictionsParams) []*Pred
 		predictions = append(predictions, p)
 	}
 	return predictions
+}
+
+func (t *Tournament) savePredictions() error {
+	file, err := os.Create("data/predictions/predictions.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	predictions := []*csvPrediction{}
+
+	for _, p := range t.Predictions {
+		match := t.findMatch(p.ID)
+		predictions = append(predictions, &csvPrediction{
+			Participant: p.Participant,
+			ID:          p.ID,
+			Home:        match.Home,
+			HomeScore:   &p.HomeScore,
+			AwayScore:   &p.AwayScore,
+			Away:        match.Away,
+			Joker:       p.Joker,
+		})
+	}
+
+	return gocsv.MarshalFile(&predictions, file)
 }
