@@ -62,7 +62,6 @@ type TournamentPrediction struct {
 
 type Participant struct {
 	Name           string
-	Predictions    []*Prediction
 	CompPrediction *TournamentPrediction
 	TotalPoints    int
 }

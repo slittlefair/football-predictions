@@ -61,7 +61,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 		for _, p := range t.Participants {
 			curr := &PointsTallier{Name: p.Name}
 			prev := &PointsTallier{Name: p.Name}
-			for _, pred := range p.Predictions {
+			for _, pred := range t.filterPredictions(&gen.GetPredictionsParams{Participant: &p.Name}) {
 				match, ok := matchLookup[pred.ID]
 				if !ok {
 					http.NotFound(w, r)
@@ -170,6 +170,7 @@ func convertMatchToEntry(match *Match) gen.Match {
 	}
 }
 
+// TODO this can be deleted??
 func (t Tournament) matchHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
@@ -212,18 +213,6 @@ func (t Tournament) matchHandler() http.HandlerFunc {
 			}
 		}
 
-		for _, p := range t.Participants {
-			for _, pred := range p.Predictions {
-				if pred.ID == match.ID {
-					matchPredictions.Predictions = append(
-						matchPredictions.Predictions,
-						t.mapPrediction(pred),
-					)
-					break
-				}
-			}
-		}
-
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -253,34 +242,27 @@ func (t Tournament) participantHandler() http.HandlerFunc {
 	}
 }
 
-func (t Tournament) mapPrediction(p *Prediction) gen.Prediction {
-	m := t.findMatch(p.ID)
-	points, _ := p.scoreMatch(m)
-	return gen.Prediction{
-		Id:          p.ID,
-		HomeScore:   p.HomeScore,
-		AwayScore:   p.AwayScore,
-		UsedJoker:   &p.Joker,
-		Points:      points,
-		HasResult:   m.HomeScore != nil && m.AwayScore != nil,
-		Participant: p.Participant,
+func (t Tournament) mapPredictions(preds []*Prediction) []gen.Prediction {
+	predictions := []gen.Prediction{}
+	for _, p := range preds {
+		m := t.findMatch(p.ID)
+		points, _ := p.scoreMatch(m)
+		predictions = append(predictions, gen.Prediction{
+			Id:          p.ID,
+			HomeScore:   p.HomeScore,
+			AwayScore:   p.AwayScore,
+			UsedJoker:   &p.Joker,
+			Points:      points,
+			HasResult:   m.HomeScore != nil && m.AwayScore != nil,
+			Participant: p.Participant,
+		})
 	}
+	return predictions
 }
 
 func (t Tournament) mapParticipant(p *Participant) gen.Participant {
-	predictions := make([]gen.Prediction, 0, len(p.Predictions))
-
-	for _, pr := range p.Predictions {
-		predictions = append(predictions, t.mapPrediction(pr))
-	}
-
-	sort.Slice(predictions, func(i, j int) bool {
-		return predictions[i].Id < predictions[j].Id
-	})
-
 	return gen.Participant{
 		Name:        p.Name,
-		Predictions: predictions,
 		TotalPoints: p.TotalPoints,
 		TournamentPredictions: gen.TournamentPredictions{
 			Winner:            p.CompPrediction.Winner,
@@ -378,7 +360,7 @@ func (t *Tournament) getPredictions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	if err := json.NewEncoder(w).Encode(predictions); err != nil {
+	if err := json.NewEncoder(w).Encode(t.mapPredictions(predictions)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -397,34 +379,24 @@ func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	fmt.Printf("request: %+#v\n", prediction)
+	existing := t.filterPredictions(&gen.GetPredictionsParams{
+		MatchId:     &prediction.MatchId,
+		Participant: &prediction.Participant,
+	})
 
-	for _, p := range t.Participants {
-		fmt.Println(p.Name, prediction.Participant, p.Name == prediction.Participant)
-		if p.Name == prediction.Participant {
-			for _, pred := range p.Predictions {
-				if pred.ID == prediction.MatchId {
-					fmt.Println("Error needs to show")
-					http.Error(w, "prediction for match already exists", http.StatusConflict)
-					return
-				}
-			}
-			joker := false
-			if prediction.PlayedJoker != nil {
-				joker = *prediction.PlayedJoker
-			}
-			fmt.Println(len(p.Predictions))
-			p.Predictions = append(p.Predictions, &Prediction{
-				ID:        prediction.MatchId,
-				HomeScore: prediction.HomeScore,
-				AwayScore: prediction.AwayScore,
-				Joker:     joker,
-			})
-			fmt.Println(len(p.Predictions))
-		}
+	if len(existing) > 0 {
+		http.Error(w, "prediction for match already exists", http.StatusConflict)
+		return
 	}
 
 	// TODO savePrediction
+	t.Predictions = append(t.Predictions, &Prediction{
+		ID:          prediction.MatchId,
+		Participant: prediction.Participant,
+		HomeScore:   prediction.HomeScore,
+		AwayScore:   prediction.AwayScore,
+		Joker:       *prediction.PlayedJoker,
+	})
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -462,27 +434,27 @@ func (t *Tournament) findMatch(id int) *Match {
 	return nil
 }
 
-func (t *Tournament) filterPredictions(params *gen.GetPredictionsParams) []gen.Prediction {
-	predictions := []gen.Prediction{}
+func (t *Tournament) filterPredictions(params *gen.GetPredictionsParams) []*Prediction {
+	predictions := []*Prediction{}
 	if params == nil {
 		for _, p := range t.Predictions {
-			predictions = append(predictions, t.mapPrediction(p))
+			predictions = append(predictions, p)
 		}
 		return predictions
 	}
 
 	for _, p := range t.Predictions {
 		if params.MatchId != nil {
-			if *params.MatchId == p.ID {
-				predictions = append(predictions, t.mapPrediction(p))
+			if *params.MatchId != p.ID {
 				continue
 			}
 		}
 		if params.Participant != nil {
-			if *params.Participant == p.Participant {
-				predictions = append(predictions, t.mapPrediction(p))
+			if *params.Participant != p.Participant {
+				continue
 			}
 		}
+		predictions = append(predictions, p)
 	}
 	return predictions
 }

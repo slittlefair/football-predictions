@@ -272,7 +272,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Match"
-              
+  # DELETE?            
   /api/matches/{id}:
     get:
       operationId: getMatch
@@ -382,3 +382,5 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ParticipantPrediction"
+        "409":
+          description: Prediction for this match and participant already exists

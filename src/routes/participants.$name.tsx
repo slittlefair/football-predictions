@@ -1,5 +1,5 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
-import { useMatches, useParticipant } from '@/api/hooks';
+import { useMatches, useParticipant, usePredictions } from '@/api/hooks';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagCell } from '@/components/FlagDisplay';
 import { MatchesList } from '@/components/MatchesList';
@@ -14,19 +14,30 @@ export const Route = createFileRoute('/participants/$name')({
 
 function RouteComponent() {
   const { name } = useParams({ from: '/participants/$name' });
-  const { data: matchesResp, isPending: matchesPending, error: matchesError } = useMatches();
+  const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
   const {
     data: participant,
     isPending: participantPending,
     error: participantError,
   } = useParticipant(name);
+  const {
+    data: predictions,
+    isPending: predictionsPending,
+    error: predictionsError,
+  } = usePredictions({
+    participant: name,
+  });
 
-  if (participantPending || !participant) {
+  const isPending = matchesPending || participantPending || predictionsPending;
+  const error = matchesError || participantError || predictionsError;
+  const loaded = matches && participant && predictions;
+
+  if (isPending || !loaded) {
     return <Spinner className="size-16" />;
   }
 
-  if (participantError || matchesError) {
-    return <ErrorCard error={participantError || matchesError} />;
+  if (error) {
+    return <ErrorCard error={error} />;
   }
 
   const { winner, runnerUp, thirdPlace, fourthPlace, topScorer, scorerNationality } =
@@ -67,7 +78,7 @@ function RouteComponent() {
           <Spinner className="size-16" />
         </div>
       )}
-      {matchesResp && <MatchesList matches={matchesResp} predictions={participant.predictions} />}
+      {matches && <MatchesList matches={matches} predictions={predictions} />}
     </div>
   );
 }

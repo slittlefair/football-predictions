@@ -972,12 +972,19 @@ export type createPredictionResponse201 = {
   status: 201
 }
 
+export type createPredictionResponse409 = {
+  data: void
+  status: 409
+}
+
 export type createPredictionResponseSuccess = (createPredictionResponse201) & {
   headers: Headers;
 };
-;
+export type createPredictionResponseError = (createPredictionResponse409) & {
+  headers: Headers;
+};
 
-export type createPredictionResponse = (createPredictionResponseSuccess)
+export type createPredictionResponse = (createPredictionResponseSuccess | createPredictionResponseError)
 
 export const getCreatePredictionUrl = () => {
 
@@ -1011,7 +1018,7 @@ export const createPrediction = async (participantPrediction: ParticipantPredict
 
 
 
-export const getCreatePredictionMutationOptions = <TError = unknown,
+export const getCreatePredictionMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrediction>>, TError,{data: ParticipantPrediction}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof createPrediction>>, TError,{data: ParticipantPrediction}, TContext> => {
 
@@ -1040,12 +1047,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type CreatePredictionMutationResult = NonNullable<Awaited<ReturnType<typeof createPrediction>>>
     export type CreatePredictionMutationBody = ParticipantPrediction
-    export type CreatePredictionMutationError = unknown
+    export type CreatePredictionMutationError = void
 
     /**
  * @summary Enter a prediction for a participant
  */
-export const useCreatePrediction = <TError = unknown,
+export const useCreatePrediction = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPrediction>>, TError,{data: ParticipantPrediction}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createPrediction>>,

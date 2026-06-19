@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { addDays, endOfDay, isAfter, isBefore } from 'date-fns';
-import { useMatches, useParticipants } from '@/api/hooks';
+import { useMatches, useParticipants, usePredictions } from '@/api/hooks';
 import { ErrorCard } from '@/components/ErrorCard';
 import { MatchesList } from '@/components/MatchesList';
 import { PageTitle } from '@/components/ui/pageTitle';
@@ -17,13 +17,22 @@ function RouteComponent() {
     isPending: participantsPending,
     error: participantsError,
   } = useParticipants();
+  const {
+    data: predictions,
+    isPending: predictionsPending,
+    error: predictionsError,
+  } = usePredictions();
 
-  if (matchesPending || participantsPending || !matches || !participants) {
+  const isPending = matchesPending || participantsPending || predictionsPending;
+  const error = matchesError || participantsError || predictionsError;
+  const loaded = matches && participants && predictions;
+
+  if (isPending || !loaded) {
     return <Spinner className="size-16" />;
   }
 
-  if (matchesError || participantsError) {
-    return <ErrorCard error={matchesError || participantsError} />;
+  if (error) {
+    return <ErrorCard error={error} />;
   }
 
   const now = new Date();
@@ -34,18 +43,19 @@ function RouteComponent() {
   });
 
   const missingPredictions: Record<number, string[]> = {};
+  const participantsNames = participants.map(p => p.name);
 
-  if (participants) {
-    for (const m of filteredMatches) {
-      const missingPreds: string[] = [];
-      for (const p of participants) {
-        const pred = p.predictions.find(p => p.id === m.id);
-        if (pred === undefined || pred.homeScore === undefined || pred.awayScore === undefined) {
-          missingPreds.push(p.name);
+  for (const m of filteredMatches) {
+    const missingPreds: string[] = [];
+    const filteredPredictions = predictions.filter(p => p.id === m.id);
+    if (participantsNames.length !== filteredPredictions.length) {
+      participantsNames.forEach(pn => {
+        if (!filteredPredictions.find(fp => fp.participant === pn)) {
+          missingPreds.push(pn);
         }
-      }
-      missingPredictions[m.id] = missingPreds;
+      });
     }
+    missingPredictions[m.id] = missingPreds;
   }
 
   return (
