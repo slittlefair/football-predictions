@@ -12,7 +12,7 @@ TODO list:
   - [x] ~~Suspense?~~
 - [ ] Review structure of backend code
 - [x] Proper flag sizing
-- [ ] Style whole app
+- [x] Style whole app
   - [x] Decide on colours/style
   - [x] Tailwind variables
   - [x] Header
@@ -27,7 +27,7 @@ TODO list:
 - [x] Style match page
 - [x] Make all page centered
 - [x] Consistent page headers
-- [ ] Order predictions by scores, then names
+- [x] Order predictions by scores, then names
 - [x] Handle jokers played in front end
 - [x] Show dates nicely
 - [x] ~~Kits api?~~ not avaiable, won't do

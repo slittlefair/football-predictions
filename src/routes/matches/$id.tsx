@@ -51,11 +51,43 @@ function RouteComponent() {
   const { match, predictions, previousNav, nextNav } = matchData;
 
   const sortedPredictions = predictions.sort((a, b) => {
-    if (a.points === b.points) {
+    // Sort unpredicted to the bottom
+    const aPredicted = a.homeScore !== undefined && a.awayScore !== undefined;
+    const bPredicted = b.homeScore !== undefined && b.awayScore !== undefined;
+
+    if (!(aPredicted && bPredicted)) {
+      if (!aPredicted && bPredicted) {
+        return 1;
+      }
+      if (aPredicted && !bPredicted) {
+        return -1;
+      }
       return a.participant.localeCompare(b.participant);
     }
-    return b.points - a.points;
+
+    // If we have points, order by who scored the most
+    if (a.points !== b.points) {
+      return b.points - a.points;
+    }
+
+    // If the match has finished, we'll sort by points and then name
+    if (a.hasResult && b.hasResult) {
+      return a.participant.localeCompare(b.participant);
+    }
+
+    // Next order by homeScore, highest first
+    if (a.homeScore !== undefined && b.homeScore !== undefined && a.homeScore !== b.homeScore) {
+      return b.homeScore - a.homeScore;
+    }
+    // Then order by awayScore, lowest first
+    if (a.awayScore !== undefined && b.awayScore !== undefined && a.awayScore !== b.awayScore) {
+      return a.awayScore - b.awayScore;
+    }
+
+    // Equal predictions just sort by name
+    return a.participant.localeCompare(b.participant);
   });
+
   const { date, time } = formatDate(match.date);
 
   return (
@@ -111,7 +143,7 @@ function RouteComponent() {
                     'bg-emerald-400 hover:bg-emerald-400': state === 'green',
                   })}
                 >
-                  <TableCell className="w-18 text-center">{p.participant}</TableCell>
+                  <TableCell className="w-18 pl-4">{p.participant}</TableCell>
                   <TableCell className="w-12 py-0 pl-0">
                     <div className="flex justify-left">
                       {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
