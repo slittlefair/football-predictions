@@ -52,7 +52,6 @@ function RouteComponent() {
   });
 
   const handleSubmitPrediction = () => {
-    console.log('YYY', Object.values(predictionsByMatchId));
     const payload = Object.entries(predictionsByMatchId).map(([matchId, p]) => ({
       matchId: Number(matchId),
       ...p,
@@ -74,21 +73,19 @@ function RouteComponent() {
   // TODO style this and update predictions with actual ones
   return (
     <>
-      <Button onClick={handleSubmitPrediction}>Submittttt</Button>
+      <Button onClick={handleSubmitPrediction}>Submit</Button>
       {futureMatches.map(fm => {
-        // TODO handle getting the pred and assigning it if not undefined
         let pred = predictionsByMatchId[fm.id];
-        console.log(fm.id, pred);
+        let existing = false;
         if (pred === undefined) {
-          console.log('pred', pred);
           const p = predictions.find(p => p.id === fm.id);
-          console.log('p', p);
           if (p !== undefined) {
             pred = {
               homeScore: p.homeScore,
               awayScore: p.awayScore,
               playedJoker: p.usedJoker,
             };
+            existing = true;
           }
         }
         if (pred === undefined) {
@@ -114,7 +111,7 @@ function RouteComponent() {
                       homeScore: Number(e.target.value),
                     })
                   }
-                  // value={pred.homeScore}
+                  value={existing ? pred.homeScore : undefined}
                 />
               </Field>
               <Field>
@@ -131,7 +128,7 @@ function RouteComponent() {
                       awayScore: Number(e.target.value),
                     })
                   }
-                  // value={pred.awayScore}
+                  value={existing ? pred.awayScore : undefined}
                 />
               </Field>
               <Field orientation="horizontal">
@@ -143,7 +140,7 @@ function RouteComponent() {
                       playedJoker: e,
                     })
                   }
-                  // checked={pred.playedJoker}
+                  checked={pred.playedJoker}
                 />
                 <Label htmlFor="joker">Play Joker</Label>
               </Field>
