@@ -172,11 +172,14 @@ function RouteComponent() {
                 return (
                   <TableRow
                     key={p.participant}
-                    className={classNames({
-                      'bg-red-400 hover:bg-red-400': state === 'red',
-                      'bg-yellow-400 hover:bg-yellow-400': state === 'orange',
-                      'bg-emerald-400 hover:bg-emerald-400': state === 'green',
-                    })}
+                    className={classNames(
+                      {
+                        'bg-red-400 hover:bg-red-400': state === 'red',
+                        'bg-amber-300 hover:bg-amber-300': state === 'orange',
+                        'bg-emerald-500 hover:bg-emerald-500': state === 'green',
+                      },
+                      'border-neutral-700',
+                    )}
                   >
                     <TableCell className="w-18 pl-4">{p.participant}</TableCell>
                     <TableCell className="w-12 py-0 pl-0">
@@ -198,9 +201,12 @@ function RouteComponent() {
               {missingPredictions.map(p => (
                 <TableRow
                   key={p}
-                  className={classNames({
-                    'bg-red-400 hover:bg-red-400': match.hasResult,
-                  })}
+                  className={classNames(
+                    {
+                      'bg-red-400 hover:bg-red-400': match.hasResult,
+                    },
+                    'border-neutral-700',
+                  )}
                 >
                   <TableCell className="w-18 pl-4">{p}</TableCell>
                   <TableCell className="w-12 py-0 pl-0" />
