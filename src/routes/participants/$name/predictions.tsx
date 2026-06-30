@@ -70,7 +70,7 @@ function RouteComponent() {
         participant,
         data: payload,
       });
-    }, 500);
+    }, 2000);
 
     return () => clearTimeout(timeout);
   }, [predictionEdits, participant, saveParticipantPredictions]);
