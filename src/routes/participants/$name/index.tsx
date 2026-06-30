@@ -1,32 +1,44 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
-import { useMatches, useParticipant } from '@/api/hooks';
+import { useMatches, useParticipant, usePredictions } from '@/api/hooks';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagCell } from '@/components/FlagDisplay';
 import { MatchesList } from '@/components/MatchesList';
+import { RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PageTitle } from '@/components/ui/pageTitle';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
-export const Route = createFileRoute('/participants/$name')({
+export const Route = createFileRoute('/participants/$name/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { name } = useParams({ from: '/participants/$name' });
-  const { data: matchesResp, isPending: matchesPending, error: matchesError } = useMatches();
+  const { name } = useParams({ from: '/participants/$name/' });
+  const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
   const {
     data: participant,
     isPending: participantPending,
     error: participantError,
   } = useParticipant(name);
+  const {
+    data: predictions,
+    isPending: predictionsPending,
+    error: predictionsError,
+  } = usePredictions({
+    participant: name,
+  });
 
-  if (participantPending || !participant) {
+  const isPending = matchesPending || participantPending || predictionsPending;
+  const error = matchesError || participantError || predictionsError;
+  const loaded = matches && participant && predictions;
+
+  if (isPending || !loaded) {
     return <Spinner className="size-16" />;
   }
 
-  if (participantError || matchesError) {
-    return <ErrorCard error={participantError || matchesError} />;
+  if (error) {
+    return <ErrorCard error={error} />;
   }
 
   const { winner, runnerUp, thirdPlace, fourthPlace, topScorer, scorerNationality } =
@@ -35,6 +47,9 @@ function RouteComponent() {
   return (
     <div>
       <PageTitle>{participant.name}</PageTitle>
+      <RouterButton to="/participants/$name/predictions" params={{ name }}>
+        Submit predictions
+      </RouterButton>
       <Card>
         <Table className="w-72">
           <TableBody>
@@ -67,7 +82,7 @@ function RouteComponent() {
           <Spinner className="size-16" />
         </div>
       )}
-      {matchesResp && <MatchesList matches={matchesResp} predictions={participant.predictions} />}
+      {matches && <MatchesList matches={matches} predictions={predictions} />}
     </div>
   );
 }

@@ -168,7 +168,7 @@ const TableRow = ({
         </TableCell>
       )}
       <TableCell className="w-10">
-        {prediction?.usedJoker && <img src={Joker} alt="Joker" className="h-6" />}
+        {prediction?.joker && <img src={Joker} alt="Joker" className="h-6" />}
       </TableCell>
       <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
     </TRow>

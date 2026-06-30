@@ -14,8 +14,9 @@ import { Route as MissingPredictionsRouteImport } from './routes/missingPredicti
 import { Route as MatchesRouteRouteImport } from './routes/matches/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MatchesIndexRouteImport } from './routes/matches/index'
-import { Route as ParticipantsNameRouteImport } from './routes/participants.$name'
 import { Route as MatchesIdRouteImport } from './routes/matches/$id'
+import { Route as ParticipantsNameIndexRouteImport } from './routes/participants/$name/index'
+import { Route as ParticipantsNamePredictionsRouteImport } from './routes/participants/$name/predictions'
 
 const TournamentRoute = TournamentRouteImport.update({
   id: '/tournament',
@@ -42,16 +43,22 @@ const MatchesIndexRoute = MatchesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MatchesRouteRoute,
 } as any)
-const ParticipantsNameRoute = ParticipantsNameRouteImport.update({
-  id: '/participants/$name',
-  path: '/participants/$name',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MatchesIdRoute = MatchesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => MatchesRouteRoute,
 } as any)
+const ParticipantsNameIndexRoute = ParticipantsNameIndexRouteImport.update({
+  id: '/participants/$name/',
+  path: '/participants/$name/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParticipantsNamePredictionsRoute =
+  ParticipantsNamePredictionsRouteImport.update({
+    id: '/participants/$name/predictions',
+    path: '/participants/$name/predictions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,16 +66,18 @@ export interface FileRoutesByFullPath {
   '/missingPredictions': typeof MissingPredictionsRoute
   '/tournament': typeof TournamentRoute
   '/matches/$id': typeof MatchesIdRoute
-  '/participants/$name': typeof ParticipantsNameRoute
   '/matches/': typeof MatchesIndexRoute
+  '/participants/$name/predictions': typeof ParticipantsNamePredictionsRoute
+  '/participants/$name/': typeof ParticipantsNameIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/missingPredictions': typeof MissingPredictionsRoute
   '/tournament': typeof TournamentRoute
   '/matches/$id': typeof MatchesIdRoute
-  '/participants/$name': typeof ParticipantsNameRoute
   '/matches': typeof MatchesIndexRoute
+  '/participants/$name/predictions': typeof ParticipantsNamePredictionsRoute
+  '/participants/$name': typeof ParticipantsNameIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,8 +86,9 @@ export interface FileRoutesById {
   '/missingPredictions': typeof MissingPredictionsRoute
   '/tournament': typeof TournamentRoute
   '/matches/$id': typeof MatchesIdRoute
-  '/participants/$name': typeof ParticipantsNameRoute
   '/matches/': typeof MatchesIndexRoute
+  '/participants/$name/predictions': typeof ParticipantsNamePredictionsRoute
+  '/participants/$name/': typeof ParticipantsNameIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,16 +98,18 @@ export interface FileRouteTypes {
     | '/missingPredictions'
     | '/tournament'
     | '/matches/$id'
-    | '/participants/$name'
     | '/matches/'
+    | '/participants/$name/predictions'
+    | '/participants/$name/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/missingPredictions'
     | '/tournament'
     | '/matches/$id'
-    | '/participants/$name'
     | '/matches'
+    | '/participants/$name/predictions'
+    | '/participants/$name'
   id:
     | '__root__'
     | '/'
@@ -105,8 +117,9 @@ export interface FileRouteTypes {
     | '/missingPredictions'
     | '/tournament'
     | '/matches/$id'
-    | '/participants/$name'
     | '/matches/'
+    | '/participants/$name/predictions'
+    | '/participants/$name/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -114,7 +127,8 @@ export interface RootRouteChildren {
   MatchesRouteRoute: typeof MatchesRouteRouteWithChildren
   MissingPredictionsRoute: typeof MissingPredictionsRoute
   TournamentRoute: typeof TournamentRoute
-  ParticipantsNameRoute: typeof ParticipantsNameRoute
+  ParticipantsNamePredictionsRoute: typeof ParticipantsNamePredictionsRoute
+  ParticipantsNameIndexRoute: typeof ParticipantsNameIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -154,19 +168,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchesIndexRouteImport
       parentRoute: typeof MatchesRouteRoute
     }
-    '/participants/$name': {
-      id: '/participants/$name'
-      path: '/participants/$name'
-      fullPath: '/participants/$name'
-      preLoaderRoute: typeof ParticipantsNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/matches/$id': {
       id: '/matches/$id'
       path: '/$id'
       fullPath: '/matches/$id'
       preLoaderRoute: typeof MatchesIdRouteImport
       parentRoute: typeof MatchesRouteRoute
+    }
+    '/participants/$name/': {
+      id: '/participants/$name/'
+      path: '/participants/$name'
+      fullPath: '/participants/$name/'
+      preLoaderRoute: typeof ParticipantsNameIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/participants/$name/predictions': {
+      id: '/participants/$name/predictions'
+      path: '/participants/$name/predictions'
+      fullPath: '/participants/$name/predictions'
+      preLoaderRoute: typeof ParticipantsNamePredictionsRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -190,7 +211,8 @@ const rootRouteChildren: RootRouteChildren = {
   MatchesRouteRoute: MatchesRouteRouteWithChildren,
   MissingPredictionsRoute: MissingPredictionsRoute,
   TournamentRoute: TournamentRoute,
-  ParticipantsNameRoute: ParticipantsNameRoute,
+  ParticipantsNamePredictionsRoute: ParticipantsNamePredictionsRoute,
+  ParticipantsNameIndexRoute: ParticipantsNameIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

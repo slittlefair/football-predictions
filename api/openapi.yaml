@@ -142,11 +142,13 @@ components:
 
         homeScore:
           type: integer
+          nullable: false
 
         awayScore:
           type: integer
+          nullable: false
 
-        usedJoker:
+        joker:
           type: boolean
 
         hasResult:
@@ -164,11 +166,13 @@ components:
         name:
           type: string
 
+        # TODO DELETE?
         predictions:
           type: array
           items:
             $ref: "#/components/schemas/Prediction"
 
+        # TODO Move this?
         tournamentPredictions:
           $ref: "#/components/schemas/TournamentPredictions"
 
@@ -217,6 +221,24 @@ components:
         code:
           type: string
 
+    ParticipantPrediction:
+      type: object
+      required:
+        - matchId
+
+      properties:
+        matchId:
+          type: integer
+
+        homeScore:
+          type: integer
+
+        awayScore:
+          type: integer
+
+        joker:
+          type: boolean
+
 
 paths:
   /api/leaderboard:
@@ -246,7 +268,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Match"
-              
+  # DELETE?            
   /api/matches/{id}:
     get:
       operationId: getMatch
@@ -315,3 +337,72 @@ paths:
                 items:
                   $ref: "#/components/schemas/Team"
                   
+  /api/predictions:
+    get:
+      operationId: getPredictions
+      summary: Get predictions (optionally filtered for match or participant)
+      parameters:
+        - name: matchId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: participant
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of predictions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prediction"
+          
+    post:
+      operationId: createPrediction
+      summary: Enter a prediction for a participant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParticipantPrediction"
+      responses:
+        "201":
+          description: Prediction Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantPrediction"
+        "409":
+          description: Prediction for this match and participant already exists
+  
+  /api/participants/{participant}/predictions:
+    put:
+      operationId: saveParticipantPredictions
+      summary: Save a number of predictions for a participant
+      parameters:
+        - name: participant
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/ParticipantPrediction"
+      responses:
+        "201":
+          description: Predictions created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prediction"

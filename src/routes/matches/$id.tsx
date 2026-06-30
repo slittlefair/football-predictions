@@ -1,10 +1,10 @@
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faWarning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import type { ReactNode } from 'react';
-import type { MatchNavigation } from '@/api/generated';
-import { useMatch } from '@/api/hooks';
+import type { Match, Prediction } from '@/api/generated';
+import { useMatches, useParticipants, usePredictions } from '@/api/hooks';
 import Joker from '@/assets/joker.svg';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
@@ -20,13 +20,25 @@ export const Route = createFileRoute('/matches/$id')({
 
 function RouteComponent() {
   const { id } = useParams({ from: '/matches/$id' });
-  const { data: matchData, isPending, error } = useMatch(id);
+  const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
+  const {
+    data: predictions,
+    isPending: predictionsPending,
+    error: predictionsError,
+  } = usePredictions({ matchId: Number(id) });
+  const {
+    data: participants,
+    isPending: participantsPending,
+    error: participantsError,
+  } = useParticipants();
 
+  const error = matchesError || predictionsError || participantsError;
   if (error) {
     return <ErrorCard error={error} />;
   }
 
-  if (isPending || !matchData) {
+  const isPending = matchesPending || predictionsPending || participantsPending;
+  if (isPending || !matches) {
     return (
       <>
         <div className="flex flex-col items-center w-full">
@@ -48,23 +60,28 @@ function RouteComponent() {
     );
   }
 
-  const { match, predictions, previousNav, nextNav } = matchData;
+  const matchIdx = matches?.findIndex(m => m.id === Number(id));
+  if (matchIdx === -1) {
+    return <ErrorCard error={new Error('match not found')} />;
+  }
 
-  const sortedPredictions = predictions.sort((a, b) => {
-    // Sort unpredicted to the bottom
-    const aPredicted = a.homeScore !== undefined && a.awayScore !== undefined;
-    const bPredicted = b.homeScore !== undefined && b.awayScore !== undefined;
+  const match = matches[matchIdx];
+  const previousMatch = matchIdx !== 0 ? matches[matchIdx - 1] : undefined;
+  const nextMatch = matchIdx !== matches.length ? matches[matchIdx + 1] : undefined;
 
-    if (!(aPredicted && bPredicted)) {
-      if (!aPredicted && bPredicted) {
-        return 1;
-      }
-      if (aPredicted && !bPredicted) {
-        return -1;
-      }
-      return a.participant.localeCompare(b.participant);
-    }
+  const participantNames = participants?.map(p => p.name);
 
+  const missingPredictions = participantNames?.filter(
+    pn => !predictions?.find(p => p.participant === pn),
+  );
+
+  const isCompletePrediction = (
+    prediction: Prediction,
+  ): prediction is Prediction & { homeScore: number; awayScore: number } => {
+    return prediction.homeScore !== undefined && prediction.awayScore !== undefined;
+  };
+
+  const sortedPredictions = predictions?.sort((a, b) => {
     // If we have points, order by who scored the most
     if (a.points !== b.points) {
       return b.points - a.points;
@@ -75,16 +92,28 @@ function RouteComponent() {
       return a.participant.localeCompare(b.participant);
     }
 
-    // Next order by homeScore, highest first
-    if (a.homeScore !== undefined && b.homeScore !== undefined && a.homeScore !== b.homeScore) {
-      return b.homeScore - a.homeScore;
+    // If a prediction is incomplete, place it at the bottom
+    if (!isCompletePrediction(a) && !isCompletePrediction(b)) {
+      return a.participant.localeCompare(b.participant);
     }
-    // Then order by awayScore, lowest first
-    if (a.awayScore !== undefined && b.awayScore !== undefined && a.awayScore !== b.awayScore) {
-      return a.awayScore - b.awayScore;
+    if (!isCompletePrediction(a)) {
+      return 1;
+    }
+    if (!isCompletePrediction(b)) {
+      return -1;
     }
 
-    // Equal predictions just sort by name
+    const aDiff = a.homeScore - a.awayScore;
+    const bDiff = b.homeScore - b.awayScore;
+
+    if (aDiff !== bDiff) {
+      return bDiff - aDiff;
+    }
+
+    if (a.homeScore !== b.homeScore) {
+      return b.homeScore - a.homeScore;
+    }
+
     return a.participant.localeCompare(b.participant);
   });
 
@@ -92,15 +121,15 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col items-center w-full">
-      {(previousNav || nextNav) && (
+      {(nextMatch || previousMatch) && (
         <div className="flex w-full mb-2">
           <NavButton
-            navItem={previousNav}
+            match={previousMatch}
             className="font-bold"
             leftIcon={<FontAwesomeIcon icon={faChevronLeft} />}
           />
           <NavButton
-            navItem={nextNav}
+            match={nextMatch}
             className="ml-auto font-bold"
             rightIcon={<FontAwesomeIcon icon={faChevronRight} />}
           />
@@ -124,67 +153,89 @@ function RouteComponent() {
           </div>
         </div>
 
-        <Table className="w-fit m-auto">
-          <TableBody>
-            {sortedPredictions.map(p => {
-              const state = !match.hasResult
-                ? 'none'
-                : p.points === 0
-                  ? 'red'
-                  : p.points < 3
-                    ? 'orange'
-                    : 'green';
-              return (
+        {sortedPredictions && missingPredictions ? (
+          <Table className="w-fit m-auto">
+            <TableBody>
+              {sortedPredictions.map(p => {
+                const state = !match.hasResult
+                  ? 'none'
+                  : p.points === 0
+                    ? 'red'
+                    : p.points < 3
+                      ? 'orange'
+                      : 'green';
+                return (
+                  <TableRow
+                    key={p.participant}
+                    className={classNames({
+                      'bg-red-400 hover:bg-red-400': state === 'red',
+                      'bg-amber-300 hover:bg-amber-300': state === 'orange',
+                      'bg-emerald-500 hover:bg-emerald-500': state === 'green',
+                      'border-neutral-700': state !== 'none',
+                    })}
+                  >
+                    <TableCell className="w-18 pl-4">{p.participant}</TableCell>
+                    <TableCell className="w-12 py-0 pl-0">
+                      <div className="flex justify-left">
+                        {p.joker && <img src={Joker} alt="joker" className="h-6" />}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-18 text-center">
+                      {p.homeScore !== undefined && p.awayScore !== undefined ? (
+                        `${p.homeScore} - ${p.awayScore}`
+                      ) : (
+                        <FontAwesomeIcon className="text-red-600" icon={faWarning} />
+                      )}
+                    </TableCell>
+                    {match.hasResult && (
+                      <TableCell className="w-12 text-center">{p.points}</TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
+              {missingPredictions.map(p => (
                 <TableRow
-                  key={p.participant}
+                  key={p}
                   className={classNames({
-                    'bg-red-400 hover:bg-red-400': state === 'red',
-                    'bg-yellow-400 hover:bg-yellow-400': state === 'orange',
-                    'bg-emerald-400 hover:bg-emerald-400': state === 'green',
+                    'bg-red-400 hover:bg-red-400 border-neutral-700': match.hasResult,
                   })}
                 >
-                  <TableCell className="w-18 pl-4">{p.participant}</TableCell>
-                  <TableCell className="w-12 py-0 pl-0">
-                    <div className="flex justify-left">
-                      {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
-                    </div>
-                  </TableCell>
+                  <TableCell className="w-18 pl-4">{p}</TableCell>
+                  <TableCell className="w-12 py-0 pl-0" />
                   <TableCell className="w-18 text-center">
-                    {p.homeScore !== undefined && p.awayScore !== undefined
-                      ? `${p.homeScore} - ${p.awayScore}`
-                      : '-'}
+                    <FontAwesomeIcon className="text-red-600" icon={faWarning} />
                   </TableCell>
-                  {match.hasResult && (
-                    <TableCell className="w-12 text-center">{p.points}</TableCell>
-                  )}
+                  {match.hasResult && <TableCell className="w-12 text-center">0</TableCell>}
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <Spinner className="size-16" />
+        )}
       </Card>
     </div>
   );
 }
 
 const NavButton = ({
-  navItem,
+  match,
   className,
   leftIcon,
   rightIcon,
 }: {
-  navItem?: MatchNavigation;
+  match?: Match;
   className?: string;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
 }) => {
-  if (!navItem) {
+  if (!match) {
     return null;
   }
   return (
-    <RouterButton to="/matches/$id" params={{ id: String(navItem.id) }} className={className}>
+    <RouterButton to="/matches/$id" params={{ id: String(match.id) }} className={className}>
       {leftIcon}
-      {navItem.homeTeam} v {navItem.awayTeam}
+      {match.homeTeam} v {match.awayTeam}
       {rightIcon}
     </RouterButton>
   );
