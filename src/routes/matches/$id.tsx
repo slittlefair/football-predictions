@@ -2,36 +2,14 @@ import { faChevronLeft, faChevronRight, faWarning } from '@fortawesome/free-soli
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
-import { type ReactNode, useState } from 'react';
-import { createPrediction, type Match, type Prediction } from '@/api/generated';
+import type { ReactNode } from 'react';
+import type { Match, Prediction } from '@/api/generated';
 import { useMatches, useParticipants, usePredictions } from '@/api/hooks';
 import Joker from '@/assets/joker.svg';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
 import { Button, RouterButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Field, FieldGroup } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/utils/date';
@@ -189,14 +167,12 @@ function RouteComponent() {
                 return (
                   <TableRow
                     key={p.participant}
-                    className={classNames(
-                      {
-                        'bg-red-400 hover:bg-red-400': state === 'red',
-                        'bg-amber-300 hover:bg-amber-300': state === 'orange',
-                        'bg-emerald-500 hover:bg-emerald-500': state === 'green',
-                      },
-                      'border-neutral-700',
-                    )}
+                    className={classNames({
+                      'bg-red-400 hover:bg-red-400': state === 'red',
+                      'bg-amber-300 hover:bg-amber-300': state === 'orange',
+                      'bg-emerald-500 hover:bg-emerald-500': state === 'green',
+                      'border-neutral-700': state !== 'none',
+                    })}
                   >
                     <TableCell className="w-18 pl-4">{p.participant}</TableCell>
                     <TableCell className="w-12 py-0 pl-0">
@@ -205,9 +181,11 @@ function RouteComponent() {
                       </div>
                     </TableCell>
                     <TableCell className="w-18 text-center">
-                      {p.homeScore !== undefined && p.awayScore !== undefined
-                        ? `${p.homeScore} - ${p.awayScore}`
-                        : '-'}
+                      {p.homeScore !== undefined && p.awayScore !== undefined ? (
+                        `${p.homeScore} - ${p.awayScore}`
+                      ) : (
+                        <FontAwesomeIcon className="text-red-600" icon={faWarning} />
+                      )}
                     </TableCell>
                     {match.hasResult && (
                       <TableCell className="w-12 text-center">{p.points}</TableCell>
@@ -218,12 +196,9 @@ function RouteComponent() {
               {missingPredictions.map(p => (
                 <TableRow
                   key={p}
-                  className={classNames(
-                    {
-                      'bg-red-400 hover:bg-red-400': match.hasResult,
-                    },
-                    'border-neutral-700',
-                  )}
+                  className={classNames({
+                    'bg-red-400 hover:bg-red-400 border-neutral-700': match.hasResult,
+                  })}
                 >
                   <TableCell className="w-18 pl-4">{p}</TableCell>
                   <TableCell className="w-12 py-0 pl-0" />
@@ -238,105 +213,10 @@ function RouteComponent() {
         ) : (
           <Spinner className="size-16" />
         )}
-        <FormDialog match={match} missingPredictions={missingPredictions} />
       </Card>
     </div>
   );
 }
-
-const FormDialog = ({
-  missingPredictions,
-  match,
-}: {
-  missingPredictions?: string[];
-  match: Match;
-}) => {
-  const { id } = useParams({ from: '/matches/$id' });
-  const [participant, setParticipant] = useState<string | null>('');
-  const [homeScore, setHomeScore] = useState<string>();
-  const [awayScore, setAwayScore] = useState<string>();
-  const [joker, setjoker] = useState(false);
-
-  if (match.hasResult || !missingPredictions || missingPredictions.length === 0) {
-    return null;
-  }
-
-  const handleSubmitPrediction = (e: React.SubmitEvent) => {
-    e.preventDefault();
-
-    createPrediction({
-      matchId: Number(id),
-      homeScore: Number(homeScore),
-      awayScore: Number(awayScore),
-      joker,
-    });
-  };
-
-  const formValid = !!participant && Number(homeScore) >= 0 && Number(awayScore) >= 0;
-
-  return (
-    <Dialog>
-      <DialogTrigger render={<Button>Add prediction</Button>} />
-      <DialogContent>
-        <form onSubmit={handleSubmitPrediction}>
-          <DialogHeader>
-            <DialogTitle>Add prediction</DialogTitle>
-            <DialogDescription>Some description here</DialogDescription>
-          </DialogHeader>
-          <FieldGroup>
-            <Field>
-              <Label htmlFor="participant">Participant</Label>
-              <Select id="participant" onValueChange={setParticipant}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a participant" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {missingPredictions?.map(p => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-            <div className="flex gap-4">
-              <Field>
-                <Label htmlFor="homeScore">
-                  <FlagDisplay displayName={match.homeTeam} />
-                </Label>
-                <Input
-                  id="homeScore"
-                  type="number"
-                  min="0"
-                  aria-invalid={Number(homeScore) < 0}
-                  onChange={e => setHomeScore(e.target.value)}
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="awayScore">
-                  <FlagDisplay displayName={match.awayTeam} />
-                </Label>
-                <Input id="awayScore" type="number" onChange={e => setAwayScore(e.target.value)} />
-              </Field>
-            </div>
-            <Field orientation="horizontal">
-              <Checkbox id="joker" name="joker" onCheckedChange={e => setjoker(e)} />
-              <Label htmlFor="joker">Play Joker</Label>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline">Cancel</Button>} />
-            <Button type="submit" disabled={!formValid}>
-              Save
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 const NavButton = ({
   match,
