@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { differenceInSeconds } from 'date-fns';
-import { Fragment, useEffect, useState } from 'react';
+import { type ForwardedRef, Fragment, forwardRef, useEffect, useRef, useState } from 'react';
 import type { Match, Prediction } from '@/api/generated';
 import Joker from '@/assets/joker.svg';
 import { FlagDisplay } from '@/components/FlagDisplay';
@@ -18,6 +18,7 @@ export const MatchesList = ({
   predictions?: Prediction[];
   missingPredictions?: Record<number, string[]>;
 }) => {
+  const ref = useRef<HTMLTableRowElement | null>(null);
   let currentDateString = '';
   let matchBucket: Match[] = [];
   const matchSections = matches.reduce<Match[][]>((acc, m, i) => {
@@ -44,13 +45,26 @@ export const MatchesList = ({
   }, []);
 
   const now = new Date();
+  let upcomingMatchId = 0;
   let nextMatchId = 0;
-  for (const m of matches) {
-    if (new Date(m.date) > now) {
+  for (let i = 0; i < matches.length; i++) {
+    const m = matches[i];
+    if (!m.hasResult) {
       nextMatchId = m.id;
+      if (new Date(m.date) > now) {
+        upcomingMatchId = m.id;
+      } else {
+        upcomingMatchId = matches[i + 1].id;
+      }
       break;
     }
   }
+
+  useEffect(() => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
 
   return matchSections.map(sec => {
     const { date } = formatDate(sec[0].date);
@@ -64,8 +78,9 @@ export const MatchesList = ({
                 <TableRow
                   key={match.id}
                   match={match}
-                  showCountdown={match.id === nextMatchId}
+                  showCountdown={match.id === upcomingMatchId}
                   prediction={predictions?.find(p => p.id === match.id)}
+                  ref={match.id === nextMatchId ? ref : undefined}
                 />
               );
               if (!missingPredictions) {
@@ -119,61 +134,68 @@ const Countdown = ({ date }: { date: string }) => {
   );
 };
 
-const TableRow = ({
-  match,
-  showCountdown,
-  prediction,
-}: {
-  match: Match;
-  showCountdown: boolean;
-  prediction?: Prediction;
-}) => {
-  const { time } = formatDate(match.date);
-  const havePrediction = prediction?.homeScore !== undefined && prediction?.awayScore !== undefined;
-  const navigate = useNavigate();
+const TableRow = forwardRef(
+  (
+    {
+      match,
+      showCountdown,
+      prediction,
+    }: {
+      match: Match;
+      showCountdown: boolean;
+      prediction?: Prediction;
+    },
+    ref: ForwardedRef<HTMLTableRowElement>,
+  ) => {
+    const { time } = formatDate(match.date);
+    const havePrediction =
+      prediction?.homeScore !== undefined && prediction?.awayScore !== undefined;
+    const navigate = useNavigate();
 
-  return (
-    <TRow
-      key={match.id}
-      className={classNames(
-        'cursor-pointer',
-        prediction && {
-          'bg-red-400 hover:bg-red-500': match.hasResult && prediction.points === 0,
-          'bg-yellow-400 hover:bg-yellow-500':
-            match.hasResult && prediction.points > 0 && prediction.points < 3,
-          'bg-emerald-400 hover:bg-emerald-500': match.hasResult && prediction.points > 2,
-        },
-      )}
-      onClick={() => navigate({ to: '/matches/$id', params: { id: String(match.id) } })}
-    >
-      <TableCell className="w-24">{match.round}</TableCell>
-      <TableCell className="w-40">
-        <div className="flex justify-end items-center w-full">
-          <FlagDisplay displayName={match.homeTeam} />
-        </div>
-      </TableCell>
-      <TableCell className="w-12 text-center">
-        {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : time}
-      </TableCell>
-      <TableCell className="w-40">
-        <div className="flex justify-start items-center w-full">
-          <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
-        </div>
-      </TableCell>
-      {prediction && (
-        <TableCell className="w-28">
-          {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
-          {'  '}
-          {havePrediction && match.hasResult && `(${prediction.points} points)`}
+    return (
+      <TRow
+        key={match.id}
+        className={classNames(
+          'cursor-pointer',
+          prediction && {
+            'bg-red-400 hover:bg-red-500': match.hasResult && prediction.points === 0,
+            'bg-yellow-400 hover:bg-yellow-500':
+              match.hasResult && prediction.points > 0 && prediction.points < 3,
+            'bg-emerald-400 hover:bg-emerald-500': match.hasResult && prediction.points > 2,
+          },
+        )}
+        onClick={() => navigate({ to: '/matches/$id', params: { id: String(match.id) } })}
+        ref={ref}
+      >
+        <TableCell className="w-24">{match.round}</TableCell>
+        <TableCell className="w-40">
+          <div className="flex justify-end items-center w-full">
+            <FlagDisplay displayName={match.homeTeam} />
+          </div>
         </TableCell>
-      )}
-      <TableCell className="w-10">
-        {prediction?.joker && <img src={Joker} alt="Joker" className="h-6" />}
-      </TableCell>
-      <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
-    </TRow>
-  );
-};
+        <TableCell className="w-12 text-center">
+          {match.hasResult ? `${match.homeScore} - ${match.awayScore}` : time}
+        </TableCell>
+        <TableCell className="w-40">
+          <div className="flex justify-start items-center w-full">
+            <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
+          </div>
+        </TableCell>
+        {prediction && (
+          <TableCell className="w-28">
+            {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
+            {'  '}
+            {havePrediction && match.hasResult && `(${prediction.points} points)`}
+          </TableCell>
+        )}
+        <TableCell className="w-10">
+          {prediction?.joker && <img src={Joker} alt="Joker" className="h-6" />}
+        </TableCell>
+        <TableCell className="w-20">{showCountdown && <Countdown date={match.date} />}</TableCell>
+      </TRow>
+    );
+  },
+);
 
 const renderCountdown = (s: number) => {
   const hours = Math.floor(s / 3600);
