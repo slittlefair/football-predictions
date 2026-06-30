@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import classNames from 'classnames';
 import { type ReactNode, useState } from 'react';
-import { createPrediction, type Match } from '@/api/generated';
+import { createPrediction, type Match, type Prediction } from '@/api/generated';
 import { useMatches, useParticipants, usePredictions } from '@/api/hooks';
 import Joker from '@/assets/joker.svg';
 import { ErrorCard } from '@/components/ErrorCard';
@@ -97,6 +97,12 @@ function RouteComponent() {
     pn => !predictions?.find(p => p.participant === pn),
   );
 
+  const isCompletePrediction = (
+    prediction: Prediction,
+  ): prediction is Prediction & { homeScore: number; awayScore: number } => {
+    return prediction.homeScore !== undefined && prediction.awayScore !== undefined;
+  };
+
   const sortedPredictions = predictions?.sort((a, b) => {
     // If we have points, order by who scored the most
     if (a.points !== b.points) {
@@ -106,6 +112,17 @@ function RouteComponent() {
     // If the match has finished, we'll sort by points and then name
     if (a.hasResult && b.hasResult) {
       return a.participant.localeCompare(b.participant);
+    }
+
+    // If a prediction is incomplete, place it at the bottom
+    if (!isCompletePrediction(a) && !isCompletePrediction(b)) {
+      return a.participant.localeCompare(b.participant);
+    }
+    if (!isCompletePrediction(a)) {
+      return 1;
+    }
+    if (!isCompletePrediction(b)) {
+      return -1;
     }
 
     const aDiff = a.homeScore - a.awayScore;
@@ -184,7 +201,7 @@ function RouteComponent() {
                     <TableCell className="w-18 pl-4">{p.participant}</TableCell>
                     <TableCell className="w-12 py-0 pl-0">
                       <div className="flex justify-left">
-                        {p.usedJoker && <img src={Joker} alt="joker" className="h-6" />}
+                        {p.joker && <img src={Joker} alt="joker" className="h-6" />}
                       </div>
                     </TableCell>
                     <TableCell className="w-18 text-center">
@@ -238,7 +255,7 @@ const FormDialog = ({
   const [participant, setParticipant] = useState<string | null>('');
   const [homeScore, setHomeScore] = useState<string>();
   const [awayScore, setAwayScore] = useState<string>();
-  const [playedJoker, setPlayedJoker] = useState(false);
+  const [joker, setjoker] = useState(false);
 
   if (match.hasResult || !missingPredictions || missingPredictions.length === 0) {
     return null;
@@ -251,7 +268,7 @@ const FormDialog = ({
       matchId: Number(id),
       homeScore: Number(homeScore),
       awayScore: Number(awayScore),
-      playedJoker,
+      joker,
     });
   };
 
@@ -305,7 +322,7 @@ const FormDialog = ({
               </Field>
             </div>
             <Field orientation="horizontal">
-              <Checkbox id="joker" name="joker" onCheckedChange={e => setPlayedJoker(e)} />
+              <Checkbox id="joker" name="joker" onCheckedChange={e => setjoker(e)} />
               <Label htmlFor="joker">Play Joker</Label>
             </Field>
           </FieldGroup>

@@ -129,8 +129,6 @@ components:
         - id
         - participant
         - points
-        - homeScore
-        - awayScore
         - hasResult
       properties:
         id:
@@ -144,11 +142,13 @@ components:
 
         homeScore:
           type: integer
+          nullable: false
 
         awayScore:
           type: integer
+          nullable: false
 
-        usedJoker:
+        joker:
           type: boolean
 
         hasResult:
@@ -225,8 +225,6 @@ components:
       type: object
       required:
         - matchId
-        - homeScore
-        - awayScore
 
       properties:
         matchId:
@@ -238,7 +236,7 @@ components:
         awayScore:
           type: integer
 
-        playedJoker:
+        joker:
           type: boolean
 
 

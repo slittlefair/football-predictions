@@ -242,7 +242,7 @@ func (t Tournament) participantHandler() http.HandlerFunc {
 }
 
 func (t Tournament) mapPredictions(preds []*Prediction) []gen.Prediction {
-	predictions := []gen.Prediction{}
+	predictions := make([]gen.Prediction, 0, len(preds))
 	for _, p := range preds {
 		m := t.findMatch(p.ID)
 		points, _ := p.scoreMatch(m)
@@ -250,7 +250,7 @@ func (t Tournament) mapPredictions(preds []*Prediction) []gen.Prediction {
 			Id:          p.ID,
 			HomeScore:   p.HomeScore,
 			AwayScore:   p.AwayScore,
-			UsedJoker:   &p.Joker,
+			Joker:       &p.Joker,
 			Points:      points,
 			HasResult:   m.HomeScore != nil && m.AwayScore != nil,
 			Participant: p.Participant,
@@ -395,10 +395,13 @@ func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Requ
 		ID:        prediction.MatchId,
 		HomeScore: prediction.HomeScore,
 		AwayScore: prediction.AwayScore,
-		Joker:     *prediction.PlayedJoker,
+		Joker:     *prediction.Joker,
 	})
 
-	t.savePredictions()
+	if err := t.savePredictions(); err != nil {
+		http.Error(w, "failed to save predictions", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -425,8 +428,8 @@ func (t *Tournament) savePredictionsHandler(w http.ResponseWriter, r *http.Reque
 
 	for _, p := range predictions {
 		var joker bool
-		if p.PlayedJoker != nil {
-			joker = *p.PlayedJoker
+		if p.Joker != nil {
+			joker = *p.Joker
 		}
 		var updated bool
 		for _, tp := range t.Predictions {
@@ -452,7 +455,10 @@ func (t *Tournament) savePredictionsHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	t.savePredictions()
+	if err := t.savePredictions(); err != nil {
+		http.Error(w, "failed to save predictions", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -493,10 +499,7 @@ func (t *Tournament) findMatch(id int) *Match {
 func (t *Tournament) filterPredictions(params *gen.GetPredictionsParams) []*Prediction {
 	predictions := []*Prediction{}
 	if params == nil {
-		for _, p := range t.Predictions {
-			predictions = append(predictions, p)
-		}
-		return predictions
+		return append(predictions, t.Predictions...)
 	}
 
 	for _, p := range t.Predictions {
@@ -520,7 +523,7 @@ func (t *Tournament) savePredictions() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	predictions := []*csvPrediction{}
 
@@ -533,8 +536,8 @@ func (t *Tournament) savePredictions() error {
 			Participant: p.Participant,
 			ID:          p.ID,
 			Home:        match.Home,
-			HomeScore:   &p.HomeScore,
-			AwayScore:   &p.AwayScore,
+			HomeScore:   p.HomeScore,
+			AwayScore:   p.AwayScore,
 			Away:        match.Away,
 			Joker:       p.Joker,
 		})

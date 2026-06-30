@@ -58,9 +58,9 @@ export interface Prediction {
   id: number;
   participant: string;
   points: number;
-  homeScore: number;
-  awayScore: number;
-  usedJoker?: boolean;
+  homeScore?: number;
+  awayScore?: number;
+  joker?: boolean;
   hasResult: boolean;
 }
 
@@ -95,9 +95,9 @@ export interface Team {
 
 export interface ParticipantPrediction {
   matchId: number;
-  homeScore: number;
-  awayScore: number;
-  playedJoker?: boolean;
+  homeScore?: number;
+  awayScore?: number;
+  joker?: boolean;
 }
 
 export type GetPredictionsParams = {

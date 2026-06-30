@@ -1,11 +1,10 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import { isAfter } from 'date-fns';
-import { useState } from 'react';
-import { type ParticipantPrediction, saveParticipantPredictions } from '@/api/generated';
+import { useEffect, useMemo, useState } from 'react';
+import { type Prediction, useSaveParticipantPredictions } from '@/api/generated';
 import { useMatches, usePredictions } from '@/api/hooks';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -17,24 +16,64 @@ export const Route = createFileRoute('/participants/$name/predictions')({
 });
 
 function RouteComponent() {
-  const { name } = useParams({ from: '/participants/$name/predictions' });
+  const { name: participant } = useParams({ from: '/participants/$name/predictions' });
   const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
   const {
-    data: predictions,
+    data,
     isPending: predictionsPending,
     error: predictionsError,
   } = usePredictions({
-    participant: name,
+    participant,
   });
 
-  type PredictionDraft = Omit<ParticipantPrediction, 'matchId'>;
-  const [predictionsByMatchId, setPredictionsByMatchId] = useState<Record<number, PredictionDraft>>(
-    {},
+  const predictions = useMemo(
+    () =>
+      data?.reduce<Record<number, Prediction>>((acc, p) => {
+        acc[p.id] = p;
+        return acc;
+      }, {}),
+    [data],
   );
+
+  type PredictionEdit = Partial<Pick<Prediction, 'homeScore' | 'awayScore' | 'joker'>>;
+
+  const [predictionEdits, setPredictionEdits] = useState<Record<number, PredictionEdit>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<null | Date>(null);
+
+  const { mutate: saveParticipantPredictions, isPending: savingPending } =
+    useSaveParticipantPredictions({
+      mutation: {
+        onSuccess: () => {
+          setHasUnsavedChanges(false);
+          setLastSavedAt(new Date());
+        },
+      },
+    });
 
   const isPending = matchesPending || predictionsPending;
   const error = matchesError || predictionsError;
   const loaded = matches && predictions;
+
+  useEffect(() => {
+    if (Object.keys(predictionEdits).length === 0) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      const payload = Object.entries(predictionEdits).map(([matchId, p]) => ({
+        matchId: Number(matchId),
+        ...p,
+      }));
+
+      saveParticipantPredictions({
+        participant,
+        data: payload,
+      });
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [predictionEdits, participant, saveParticipantPredictions]);
 
   if (isPending || !loaded) {
     return <Spinner className="size-16" />;
@@ -51,96 +90,87 @@ function RouteComponent() {
     return isAfter(d, now);
   });
 
-  const handleSubmitPrediction = () => {
-    const payload = Object.entries(predictionsByMatchId).map(([matchId, p]) => ({
-      matchId: Number(matchId),
-      ...p,
-    }));
-    saveParticipantPredictions(name, payload);
-  };
-
-  const updatePrediction = (matchId: number, updates: Partial<ParticipantPrediction>) => {
-    setPredictionsByMatchId(prev => ({
-      ...prev,
-      [matchId]: {
-        matchId,
-        ...prev[matchId],
-        ...updates,
-      },
-    }));
+  const updatePrediction = (matchId: number, updates: PredictionEdit) => {
+    setHasUnsavedChanges(true);
+    setPredictionEdits(prev => {
+      return {
+        ...prev,
+        [matchId]: {
+          ...prev[matchId],
+          ...updates,
+        },
+      };
+    });
   };
 
   // TODO style this and update predictions with actual ones
   return (
     <>
-      <Button onClick={handleSubmitPrediction}>Submit</Button>
+      <p>
+        {savingPending
+          ? 'Saving...'
+          : hasUnsavedChanges
+            ? 'Waiting to save...'
+            : lastSavedAt
+              ? `Saved at ${lastSavedAt.toLocaleTimeString()}`
+              : 'Not saved'}
+      </p>
       {futureMatches.map(fm => {
-        let pred = predictionsByMatchId[fm.id];
-        let existing = false;
-        if (pred === undefined) {
-          const p = predictions.find(p => p.id === fm.id);
-          if (p !== undefined) {
-            pred = {
-              homeScore: p.homeScore,
-              awayScore: p.awayScore,
-              playedJoker: p.usedJoker,
-            };
-            existing = true;
-          }
-        }
-        if (pred === undefined) {
-          pred = {
-            homeScore: 0,
-            awayScore: 0,
-          };
-        }
+        const prediction = {
+          ...predictions[fm.id],
+          ...predictionEdits[fm.id],
+        };
         return (
           <FieldGroup key={fm.id}>
-            <div className="flex gap-2">
-              <Field>
-                <Label htmlFor="homeScore">
+            <div className="flex gap-2 mt-2">
+              <Field orientation="horizontal" className="flex">
+                <Label htmlFor={`${fm.id}-homeScore`} className="w-full flex justify-end">
                   <FlagDisplay displayName={fm.homeTeam} />
                 </Label>
                 <Input
-                  id="homeScore"
+                  id={`${fm.id}-homeScore`}
                   type="number"
                   min="0"
-                  aria-invalid={pred.homeScore < 0}
+                  aria-invalid={(prediction.homeScore || 0) < 0}
                   onChange={e =>
                     updatePrediction(fm.id, {
-                      homeScore: Number(e.target.value),
+                      homeScore: e.target.value === '' ? undefined : Number(e.target.value),
+                      awayScore: prediction.awayScore,
+                      joker: prediction.joker,
                     })
                   }
-                  value={existing ? pred.homeScore : undefined}
+                  value={prediction.homeScore ?? ''}
+                  className="w-20"
                 />
               </Field>
-              <Field>
-                <Label htmlFor="awayScore">
-                  <FlagDisplay displayName={fm.awayTeam} />
-                </Label>
+              <Field orientation="horizontal">
                 <Input
-                  id="awayScore"
+                  id={`${fm.id}-awayScore`}
                   type="number"
                   min="0"
-                  aria-invalid={pred.awayScore < 0}
+                  aria-invalid={(prediction.awayScore || 0) < 0}
                   onChange={e =>
                     updatePrediction(fm.id, {
-                      awayScore: Number(e.target.value),
+                      awayScore: e.target.value === '' ? undefined : Number(e.target.value),
                     })
                   }
-                  value={existing ? pred.awayScore : undefined}
+                  value={prediction.awayScore ?? ''}
+                  className="w-20"
                 />
+                <Label htmlFor={`${fm.id}-awayScore`} className="w-full">
+                  <FlagDisplay displayName={fm.awayTeam} flagPosition="left" />
+                </Label>
               </Field>
               <Field orientation="horizontal">
                 <Checkbox
                   id="joker"
                   name="joker"
-                  onCheckedChange={e =>
+                  onCheckedChange={checked =>
                     updatePrediction(fm.id, {
-                      playedJoker: e,
+                      joker: checked,
                     })
                   }
-                  checked={pred.playedJoker}
+                  checked={prediction.joker ?? false}
                 />
                 <Label htmlFor="joker">Play Joker</Label>
               </Field>

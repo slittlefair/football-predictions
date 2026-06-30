@@ -43,8 +43,8 @@ type csvPrediction struct {
 type Prediction struct {
 	ID          int
 	Participant string
-	HomeScore   int
-	AwayScore   int
+	HomeScore   *int
+	AwayScore   *int
 	Points      int
 	Joker       bool
 }
@@ -104,13 +104,13 @@ func (t *Tournament) loadPredictions() {
 	}
 
 	for _, p := range predictions {
-		if p.HomeScore == nil || p.AwayScore == nil {
-			continue
-		}
+		// if p.HomeScore == nil || p.AwayScore == nil {
+		// 	continue
+		// }
 		t.Predictions = append(t.Predictions, &Prediction{
 			ID:          p.ID,
-			HomeScore:   *p.HomeScore,
-			AwayScore:   *p.AwayScore,
+			HomeScore:   p.HomeScore,
+			AwayScore:   p.AwayScore,
 			Joker:       p.Joker,
 			Participant: p.Participant,
 		})
@@ -145,7 +145,7 @@ func (p *Prediction) correctScore(m *Match) bool {
 	if m.HomeScore == nil || m.AwayScore == nil {
 		return false
 	}
-	return p.HomeScore == *m.HomeScore && p.AwayScore == *m.AwayScore
+	return *p.HomeScore == *m.HomeScore && *p.AwayScore == *m.AwayScore
 }
 
 func (p *Prediction) correctResult(m *Match) bool {
@@ -153,18 +153,22 @@ func (p *Prediction) correctResult(m *Match) bool {
 		return false
 	}
 
+	if p.HomeScore == nil || p.AwayScore == nil {
+		return false
+	}
+
 	// Predicted tie
-	if p.HomeScore == p.AwayScore && *m.HomeScore == *m.AwayScore {
+	if *p.HomeScore == *p.AwayScore && *m.HomeScore == *m.AwayScore {
 		return true
 	}
 
 	// Predicted home win
-	if p.HomeScore > p.AwayScore && *m.HomeScore > *m.AwayScore {
+	if *p.HomeScore > *p.AwayScore && *m.HomeScore > *m.AwayScore {
 		return true
 	}
 
 	// Predicted away win
-	if p.AwayScore > p.HomeScore && *m.AwayScore > *m.HomeScore {
+	if *p.AwayScore > *p.HomeScore && *m.AwayScore > *m.HomeScore {
 		return true
 	}
 

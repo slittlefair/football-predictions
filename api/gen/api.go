@@ -58,21 +58,21 @@ type Participant struct {
 
 // ParticipantPrediction defines model for ParticipantPrediction.
 type ParticipantPrediction struct {
-	AwayScore   int   `json:"awayScore"`
-	HomeScore   int   `json:"homeScore"`
-	MatchId     int   `json:"matchId"`
-	PlayedJoker *bool `json:"playedJoker,omitempty"`
+	AwayScore *int  `json:"awayScore,omitempty"`
+	HomeScore *int  `json:"homeScore,omitempty"`
+	Joker     *bool `json:"joker,omitempty"`
+	MatchId   int   `json:"matchId"`
 }
 
 // Prediction defines model for Prediction.
 type Prediction struct {
-	AwayScore   int    `json:"awayScore"`
+	AwayScore   *int   `json:"awayScore,omitempty"`
 	HasResult   bool   `json:"hasResult"`
-	HomeScore   int    `json:"homeScore"`
+	HomeScore   *int   `json:"homeScore,omitempty"`
 	Id          int    `json:"id"`
+	Joker       *bool  `json:"joker,omitempty"`
 	Participant string `json:"participant"`
 	Points      int    `json:"points"`
-	UsedJoker   *bool  `json:"usedJoker,omitempty"`
 }
 
 // Team defines model for Team.
