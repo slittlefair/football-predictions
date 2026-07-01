@@ -2,11 +2,11 @@ import { createFileRoute } from '@tanstack/react-router';
 import { addDays, endOfDay, isAfter, isBefore } from 'date-fns';
 import { useMatches, useParticipants, usePredictions } from '@/api/hooks';
 import { ErrorCard } from '@/components/ErrorCard';
-import { MatchesList } from '@/components/MatchesList';
 import { PageTitle } from '@/components/ui/pageTitle';
 import { Spinner } from '@/components/ui/spinner';
+import { MatchesList } from '@/views/MatchesList';
 
-export const Route = createFileRoute('/missingPredictions')({
+export const Route = createFileRoute('/_app/missingPredictions')({
   component: RouteComponent,
 });
 

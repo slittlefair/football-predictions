@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-export const Route = createFileRoute('/tournament')({
+export const Route = createFileRoute('/_app/tournament')({
   component: RouteComponent,
 });
 

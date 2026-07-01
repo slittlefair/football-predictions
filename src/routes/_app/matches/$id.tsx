@@ -14,12 +14,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/utils/date';
 
-export const Route = createFileRoute('/matches/$id')({
+export const Route = createFileRoute('/_app/matches/$id')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { id } = useParams({ from: '/matches/$id' });
+  const { id } = useParams({ from: '/_app/matches/$id' });
   const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
   const {
     data: predictions,

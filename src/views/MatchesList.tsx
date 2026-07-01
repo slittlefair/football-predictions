@@ -181,13 +181,15 @@ const TableRow = forwardRef(
             <FlagDisplay displayName={match.awayTeam} flagPosition="left" />
           </div>
         </TableCell>
-        {prediction && (
-          <TableCell className="w-28">
-            {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
-            {'  '}
-            {havePrediction && match.hasResult && `(${prediction.points} points)`}
-          </TableCell>
-        )}
+        <TableCell className="w-28">
+          {prediction && (
+            <>
+              {havePrediction && `${prediction.homeScore} - ${prediction.awayScore}`}
+              {'  '}
+              {havePrediction && match.hasResult && `(${prediction.points} points)`}
+            </>
+          )}
+        </TableCell>
         <TableCell className="w-10">
           {prediction?.joker && <img src={Joker} alt="Joker" className="h-6" />}
         </TableCell>

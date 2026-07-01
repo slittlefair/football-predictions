@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router';
+import { useParams } from '@tanstack/react-router';
 import { isAfter } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import { type Prediction, useSaveParticipantPredictions } from '@/api/generated';
@@ -11,12 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 
-export const Route = createFileRoute('/participants/$name/predictions')({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
-  const { name: participant } = useParams({ from: '/participants/$name/predictions' });
+export const ParticipantPredictions = () => {
+  const { name: participant } = useParams({ from: '/_app/participants/$name' });
   const { data: matches, isPending: matchesPending, error: matchesError } = useMatches();
   const {
     data,
@@ -180,4 +176,4 @@ function RouteComponent() {
       })}
     </>
   );
-}
+};
