@@ -82,7 +82,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				} else if score != 0 {
 					curr.CorrectResults++
 				}
-				if !match.Date.Before(startOfToday) {
+				if !match.Date.Before(startOfToday.Add(time.Hour * -24)) {
 					continue
 				}
 
@@ -91,6 +91,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 					prev.CorrectScores++
 				}
 			}
+			curr.Points += t.scoreTournament(p)
 			currentPoints = append(currentPoints, curr)
 			previousPoints = append(previousPoints, prev)
 		}
@@ -532,6 +533,7 @@ func (t *Tournament) savePredictions() error {
 		if match == nil {
 			continue
 		}
+		points, _ := p.scoreMatch(match)
 		predictions = append(predictions, &csvPrediction{
 			Participant: p.Participant,
 			ID:          p.ID,
@@ -540,6 +542,7 @@ func (t *Tournament) savePredictions() error {
 			AwayScore:   p.AwayScore,
 			Away:        match.Away,
 			Joker:       p.Joker,
+			Points:      points,
 		})
 	}
 

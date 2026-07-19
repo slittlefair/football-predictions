@@ -17,6 +17,16 @@ export const Route = createFileRoute('/_app/tournament')({
   component: RouteComponent,
 });
 
+type TournamentResults = {
+  Winner?: string;
+  RunnerUp?: string;
+  ThirdPlace?: string;
+  FourthPlace?: string;
+  TopScorer?: string;
+};
+
+const results = ['', '', 'England', 'France', ''];
+
 function RouteComponent() {
   const { data: participants, isPending } = useParticipants();
 
@@ -45,11 +55,15 @@ function RouteComponent() {
               return (
                 <TableRow key={p.name} className="[&>td:not(:first-child)]:text-right">
                   <TableCell className="font-bold">{p.name}</TableCell>
-                  <FlagCell text={preds.winner} />
-                  <FlagCell text={preds.runnerUp} />
-                  <FlagCell text={preds.thirdPlace} />
-                  <FlagCell text={preds.fourthPlace} />
-                  <FlagCell text={preds.topScorer} code={preds.scorerNationality} />
+                  <FlagCell text={preds.winner} className={bgClass(preds.winner, 0)} />
+                  <FlagCell text={preds.runnerUp} className={bgClass(preds.runnerUp, 1)} />
+                  <FlagCell text={preds.thirdPlace} className={bgClass(preds.thirdPlace, 2)} />
+                  <FlagCell text={preds.fourthPlace} className={bgClass(preds.fourthPlace, 3)} />
+                  <FlagCell
+                    text={preds.topScorer}
+                    code={preds.scorerNationality}
+                    className={bgClass(preds.topScorer, 4)}
+                  />
                 </TableRow>
               );
             })}
@@ -59,3 +73,16 @@ function RouteComponent() {
     </div>
   );
 }
+
+const bgClass = (content: string, idx: number) => {
+  if (results[idx] === '') {
+    return '';
+  }
+  if (content === results[idx]) {
+    return 'bg-emerald-200';
+  }
+  if (results.includes(content)) {
+    return 'bg-amber-200';
+  }
+  return 'bg-red-200';
+};

@@ -52,8 +52,16 @@ export const FlagDisplay = ({
   );
 };
 
-export const FlagCell = ({ text, code }: { text: string; code?: string }) => (
-  <TableCell>
+export const FlagCell = ({
+  text,
+  code,
+  className,
+}: {
+  text: string;
+  code?: string;
+  className?: string;
+}) => (
+  <TableCell className={className}>
     <div className="flex justify-start">
       <FlagDisplay displayName={text} teamOverride={code} flagPosition="left" />
     </div>

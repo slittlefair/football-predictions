@@ -48,7 +48,7 @@ function RouteComponent() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <PageTitle>{participant.name}</PageTitle>
-      <Tabs defaultValue="results" className="flex min-h-0 flex-1 flex-col min-w-3xl">
+      <Tabs key={name} defaultValue="results" className="flex min-h-0 flex-1 flex-col min-w-3xl">
         <TabsList>
           <TabsTrigger value="results">Results</TabsTrigger>
           <TabsTrigger value="predictions">Predictions</TabsTrigger>
@@ -92,9 +92,6 @@ function RouteComponent() {
           <ParticipantPredictions />
         </TabsContent>
       </Tabs>
-      {/* <RouterButton to="/participants/$name/predictions" params={{ name }}>
-        Submit predictions
-      </RouterButton> */}
     </div>
   );
 }

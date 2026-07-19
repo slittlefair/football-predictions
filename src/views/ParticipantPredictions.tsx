@@ -1,7 +1,12 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { isAfter } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
-import { type Prediction, useSaveParticipantPredictions } from '@/api/generated';
+import {
+  getGetPredictionsQueryKey,
+  type Prediction,
+  useSaveParticipantPredictions,
+} from '@/api/generated';
 import { useMatches, usePredictions } from '@/api/hooks';
 import { ErrorCard } from '@/components/ErrorCard';
 import { FlagDisplay } from '@/components/FlagDisplay';
@@ -22,6 +27,8 @@ export const ParticipantPredictions = () => {
     participant,
   });
 
+  const queryClient = useQueryClient();
+
   const predictions = useMemo(
     () =>
       data?.reduce<Record<number, Prediction>>((acc, p) => {
@@ -40,7 +47,10 @@ export const ParticipantPredictions = () => {
   const { mutate: saveParticipantPredictions, isPending: savingPending } =
     useSaveParticipantPredictions({
       mutation: {
-        onSuccess: () => {
+        onSuccess: async () => {
+          await queryClient.invalidateQueries({
+            queryKey: getGetPredictionsQueryKey({ participant }),
+          });
           setHasUnsavedChanges(false);
           setLastSavedAt(new Date());
         },
@@ -66,7 +76,7 @@ export const ParticipantPredictions = () => {
         participant,
         data: payload,
       });
-    }, 2000);
+    }, 500);
 
     return () => clearTimeout(timeout);
   }, [predictionEdits, participant, saveParticipantPredictions]);
@@ -109,7 +119,7 @@ export const ParticipantPredictions = () => {
             ? 'Waiting to save...'
             : lastSavedAt
               ? `Saved at ${lastSavedAt.toLocaleTimeString()}`
-              : 'Not saved'}
+              : ''}
       </p>
       {futureMatches.map(fm => {
         const prediction = {
@@ -147,7 +157,9 @@ export const ParticipantPredictions = () => {
                   aria-invalid={(prediction.awayScore || 0) < 0}
                   onChange={e =>
                     updatePrediction(fm.id, {
+                      homeScore: prediction.homeScore,
                       awayScore: e.target.value === '' ? undefined : Number(e.target.value),
+                      joker: prediction.joker,
                     })
                   }
                   value={prediction.awayScore ?? ''}
@@ -163,6 +175,8 @@ export const ParticipantPredictions = () => {
                   name="joker"
                   onCheckedChange={checked =>
                     updatePrediction(fm.id, {
+                      homeScore: prediction.homeScore,
+                      awayScore: prediction.awayScore,
                       joker: checked,
                     })
                   }

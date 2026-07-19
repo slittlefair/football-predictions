@@ -6,3 +6,4 @@ cmd = "go build -o ./tmp/main ./internal"
 bin = "./tmp/main"
 include_dir = ["internal", "data"]
 include_ext = ["go", "csv"]
+exclude_file = ["data/timeline.csv"]

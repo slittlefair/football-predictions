@@ -42,7 +42,22 @@ TODO list:
   - [ ] Average
   - [ ] Mode
 - [ ] Breadcrumbs
+- [ ] Complete prediction entry page for participant
+  - [ ] Handle joker
+  - [ ] Handle joker count/limit
+  - [ ] Proper styling
+  - [ ] Fix flakiness
+- [ ] Editing mode for putting results into match page
+- [ ] Override to allow adding predictions to started game
+- [ ] Rearrange matches page to just alphabetical order
+- [ ] Way to enter results
+  - [ ] Admin mode?
 - [ ] Page in nav for next match
   - [ ] And current match?
-  - [ ] Show countdown on (next?) matches
+  - [x] Show countdown on (next?) matches
+- [ ] Admin mode for setting up a tournament
+  - [ ] Fixture maker
+  - [ ] Set which team goes here to next round
+  - [ ] Tables pages
+  - [ ] 3rd place table
 - [ ] Decide on next steps (db? logins? alternate backend/front end type consistency?)
