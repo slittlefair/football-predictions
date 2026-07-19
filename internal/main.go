@@ -15,6 +15,7 @@ import (
 type Tournament struct {
 	Matches      []*Match
 	Participants []*Participant
+	Predictions  []*Prediction
 }
 
 type Match struct {
@@ -28,12 +29,24 @@ type Match struct {
 	Group     string    `csv:"Group"`
 }
 
+type csvPrediction struct {
+	Participant string `csv:"Participant"`
+	ID          int    `csv:"Match Number"`
+	Home        string `csv:"Home"`
+	HomeScore   *int   `csv:"Home Score,omitempty"`
+	AwayScore   *int   `csv:"Away Score,omitempty"`
+	Away        string `csv:"Away"`
+	Points      int
+	Joker       bool `csv:"Joker"`
+}
+
 type Prediction struct {
-	ID        int  `csv:"Match Number"`
-	HomeScore *int `csv:"Home Score,omitempty"`
-	AwayScore *int `csv:"Away Score,omitempty"`
-	Points    int
-	Joker     bool `csv:"Joker"`
+	ID          int
+	Participant string
+	HomeScore   *int
+	AwayScore   *int
+	Points      int
+	Joker       bool
 }
 
 type CompPlacements struct {
@@ -52,7 +65,6 @@ type TournamentPrediction struct {
 
 type Participant struct {
 	Name           string
-	Predictions    []*Prediction
 	CompPrediction *TournamentPrediction
 	TotalPoints    int
 }
@@ -79,6 +91,33 @@ func loadMatches() []*Match {
 	return matches
 }
 
+func (t *Tournament) loadPredictions() {
+	in, err := os.Open("data/predictions/predictions.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = in.Close() }()
+
+	predictions := []*csvPrediction{}
+	if err := gocsv.UnmarshalFile(in, &predictions); err != nil {
+		panic(err)
+	}
+
+	for _, p := range predictions {
+		// if p.HomeScore == nil || p.AwayScore == nil {
+		// 	continue
+		// }
+		t.Predictions = append(t.Predictions, &Prediction{
+			ID:          p.ID,
+			HomeScore:   p.HomeScore,
+			AwayScore:   p.AwayScore,
+			Joker:       p.Joker,
+			Participant: p.Participant,
+			Points:      p.Points,
+		})
+	}
+}
+
 func (p *Prediction) scoreMatch(m *Match) (int, bool) {
 	points, correct := p.calculatePoints(m)
 	if p.Joker {
@@ -88,6 +127,9 @@ func (p *Prediction) scoreMatch(m *Match) (int, bool) {
 }
 
 func (p *Prediction) calculatePoints(m *Match) (int, bool) {
+	if m == nil {
+		return 0, false
+	}
 	if m.HomeScore == nil || m.AwayScore == nil {
 		return 0, false
 	}
@@ -101,14 +143,18 @@ func (p *Prediction) calculatePoints(m *Match) (int, bool) {
 }
 
 func (p *Prediction) correctScore(m *Match) bool {
-	if p.HomeScore == nil || m.HomeScore == nil || p.AwayScore == nil || m.AwayScore == nil {
+	if m.HomeScore == nil || m.AwayScore == nil {
 		return false
 	}
 	return *p.HomeScore == *m.HomeScore && *p.AwayScore == *m.AwayScore
 }
 
 func (p *Prediction) correctResult(m *Match) bool {
-	if p.HomeScore == nil || m.HomeScore == nil || p.AwayScore == nil || m.AwayScore == nil {
+	if m.HomeScore == nil || m.AwayScore == nil {
+		return false
+	}
+
+	if p.HomeScore == nil || p.AwayScore == nil {
 		return false
 	}
 
@@ -152,7 +198,7 @@ func scoreTeam(i int, guess, actual []string) int {
 	return 0
 }
 
-func (t *Tournament) scoreTournament() {
+func (t *Tournament) scoreTournament(p *Participant) int {
 	tournResIn, err := os.Open("data/tournament_results.csv")
 	if err != nil {
 		panic(err)
@@ -165,7 +211,7 @@ func (t *Tournament) scoreTournament() {
 	}
 
 	if len(results) == 0 {
-		return
+		return 0
 	}
 
 	if len(results) != 1 {
@@ -175,16 +221,79 @@ func (t *Tournament) scoreTournament() {
 	tournamentResults := results[0]
 	actual := tournamentResults.top4()
 
-	for _, p := range t.Participants {
-		if p.CompPrediction.TopScorer == tournamentResults.TopScorer {
-			p.TotalPoints += correctPlacement
-		}
-		guess := p.CompPrediction.top4()
-		for i := range guess {
-			p.TotalPoints += scoreTeam(i, guess, actual)
-		}
+	ret := 0
+	if p.CompPrediction.TopScorer == tournamentResults.TopScorer {
+		ret += correctPlacement
 	}
+	guess := p.CompPrediction.top4()
+	for i := range guess {
+		ret += scoreTeam(i, guess, actual)
+	}
+	return ret
+
 }
+
+// type timelinePrediction struct {
+// 	Participant string
+// 	Points      int
+// 	Match       int
+// }
+
+// func (t *Tournament) leaderboardTimeline() error {
+// 	file, err := os.Create("data/timeline.csv")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer func() { _ = file.Close() }()
+
+// 	w := csv.NewWriter(file)
+// 	defer w.Flush()
+
+// 	// Write header
+// 	header := []string{"Match"}
+// 	for _, p := range t.Participants {
+// 		header = append(header, p.Name)
+// 	}
+// 	if err := w.Write(header); err != nil {
+// 		return err
+// 	}
+
+// 	// Build lookup of points by match and participant.
+// 	matchPoints := make(map[int]map[string]int)
+// 	for _, pred := range t.Predictions {
+// 		if matchPoints[pred.ID] == nil {
+// 			matchPoints[pred.ID] = make(map[string]int)
+// 		}
+// 		matchPoints[pred.ID][pred.Participant] = pred.Points
+// 	}
+
+// 	// Track cumulative totals.
+// 	totals := make(map[string]int)
+
+// 	matchNo := 1
+// 	for _, match := range t.Matches {
+// 		// Skip matches that haven't been played.
+// 		if match.HomeScore == nil && match.AwayScore == nil {
+// 			continue
+// 		}
+
+// 		row := []string{strconv.Itoa(matchNo)}
+
+// 		for _, p := range t.Participants {
+// 			totals[p.Name] += matchPoints[match.ID][p.Name]
+// 			row = append(row, strconv.Itoa(totals[p.Name]))
+// 		}
+
+// 		if err := w.Write(row); err != nil {
+// 			return err
+// 		}
+
+// 		matchNo++
+// 	}
+
+// 	w.Flush()
+// 	return w.Error()
+// }
 
 func main() {
 	tournament := &Tournament{
@@ -204,25 +313,17 @@ func main() {
 	}
 
 	for _, cp := range tournamentPredicions {
-		partIn, err := os.Open(fmt.Sprintf("data/predictions/%s.csv", cp.Participant))
-		if err != nil {
-			panic(err)
-		}
-		defer func() { _ = partIn.Close() }()
-
-		predictions := []*Prediction{}
-		if err := gocsv.UnmarshalFile(partIn, &predictions); err != nil {
-			panic(fmt.Errorf("loading %s: %w", cp.Participant, err))
-		}
-
 		tournament.Participants = append(tournament.Participants, &Participant{
 			Name:           cp.Participant,
 			CompPrediction: cp,
-			Predictions:    predictions,
 		})
 	}
 
-	tournament.scoreTournament()
+	tournament.loadPredictions()
+
+	// if err := tournament.leaderboardTimeline(); err != nil {
+	// 	fmt.Printf("Error producing timeline csv: %v\n", err)
+	// }
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/leaderboard", tournament.leaderboardHandler())
@@ -232,6 +333,8 @@ func main() {
 	mux.HandleFunc("/api/participants/{name}", tournament.participantHandler())
 	mux.HandleFunc("/api/tournament", tournament.tournamentHandler())
 	mux.HandleFunc("/api/teams", teamsHandler())
+	mux.HandleFunc("/api/predictions", tournament.predictionsHandler())
+	mux.HandleFunc("/api/participants/{participant}/predictions", tournament.predictionsHandler())
 
 	fmt.Println("Listening on http://localhost:8080")
 

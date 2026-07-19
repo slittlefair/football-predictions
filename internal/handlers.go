@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"footballpredictions/api/gen"
+	"log"
 	"net/http"
 	"os"
 	"slices"
@@ -59,7 +60,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 		for _, p := range t.Participants {
 			curr := &PointsTallier{Name: p.Name}
 			prev := &PointsTallier{Name: p.Name}
-			for _, pred := range p.Predictions {
+			for _, pred := range t.filterPredictions(&gen.GetPredictionsParams{Participant: &p.Name}) {
 				match, ok := matchLookup[pred.ID]
 				if !ok {
 					http.NotFound(w, r)
@@ -81,7 +82,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 				} else if score != 0 {
 					curr.CorrectResults++
 				}
-				if !match.Date.Before(startOfToday) {
+				if !match.Date.Before(startOfToday.Add(time.Hour * -24)) {
 					continue
 				}
 
@@ -90,6 +91,7 @@ func (t *Tournament) leaderboardHandler() http.HandlerFunc {
 					prev.CorrectScores++
 				}
 			}
+			curr.Points += t.scoreTournament(p)
 			currentPoints = append(currentPoints, curr)
 			previousPoints = append(previousPoints, prev)
 		}
@@ -168,6 +170,7 @@ func convertMatchToEntry(match *Match) gen.Match {
 	}
 }
 
+// TODO this can be deleted??
 func (t Tournament) matchHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
@@ -210,18 +213,6 @@ func (t Tournament) matchHandler() http.HandlerFunc {
 			}
 		}
 
-		for _, p := range t.Participants {
-			for _, pred := range p.Predictions {
-				if pred.ID == match.ID {
-					matchPredictions.Predictions = append(
-						matchPredictions.Predictions,
-						mapPrediction(p.Name, pred, match),
-					)
-					break
-				}
-			}
-		}
-
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -251,38 +242,27 @@ func (t Tournament) participantHandler() http.HandlerFunc {
 	}
 }
 
-func mapPrediction(name string, p *Prediction, m *Match) gen.Prediction {
-	points, _ := p.scoreMatch(m)
-	return gen.Prediction{
-		Id:          p.ID,
-		HomeScore:   p.HomeScore,
-		AwayScore:   p.AwayScore,
-		UsedJoker:   &p.Joker,
-		Points:      points,
-		HasResult:   m.HomeScore != nil && m.AwayScore != nil,
-		Participant: name,
+func (t Tournament) mapPredictions(preds []*Prediction) []gen.Prediction {
+	predictions := make([]gen.Prediction, 0, len(preds))
+	for _, p := range preds {
+		m := t.findMatch(p.ID)
+		points, _ := p.scoreMatch(m)
+		predictions = append(predictions, gen.Prediction{
+			Id:          p.ID,
+			HomeScore:   p.HomeScore,
+			AwayScore:   p.AwayScore,
+			Joker:       &p.Joker,
+			Points:      points,
+			HasResult:   m.HomeScore != nil && m.AwayScore != nil,
+			Participant: p.Participant,
+		})
 	}
+	return predictions
 }
 
 func (t Tournament) mapParticipant(p *Participant) gen.Participant {
-	predictions := make([]gen.Prediction, 0, len(p.Predictions))
-	matchLookup := t.matchLookup()
-
-	for _, pr := range p.Predictions {
-		m, ok := matchLookup[pr.ID]
-		if !ok {
-			continue
-		}
-		predictions = append(predictions, mapPrediction(p.Name, pr, m))
-	}
-
-	sort.Slice(predictions, func(i, j int) bool {
-		return predictions[i].Id < predictions[j].Id
-	})
-
 	return gen.Participant{
 		Name:        p.Name,
-		Predictions: predictions,
 		TotalPoints: p.TotalPoints,
 		TournamentPredictions: gen.TournamentPredictions{
 			Winner:            p.CompPrediction.Winner,
@@ -353,4 +333,218 @@ func teamsHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
+}
+
+func (t *Tournament) predictionsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			t.getPredictions(w, r)
+			// TODO remove when put in place
+		case http.MethodPost:
+			t.createPredictionHandler(w, r)
+		case http.MethodPut:
+			t.savePredictionsHandler(w, r)
+
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+func (t *Tournament) getPredictions(w http.ResponseWriter, r *http.Request) {
+	params, err := parseGetPredictionsParams(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	predictions := t.filterPredictions(params)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if err := json.NewEncoder(w).Encode(t.mapPredictions(predictions)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (t *Tournament) createPredictionHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var prediction gen.ParticipantPrediction
+
+	if err := json.NewDecoder(r.Body).Decode(&prediction); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	existing := t.filterPredictions(&gen.GetPredictionsParams{
+		MatchId: &prediction.MatchId,
+	})
+
+	if len(existing) > 0 {
+		http.Error(w, "prediction for match already exists", http.StatusConflict)
+		return
+	}
+
+	// TODO savePrediction
+	t.Predictions = append(t.Predictions, &Prediction{
+		ID:        prediction.MatchId,
+		HomeScore: prediction.HomeScore,
+		AwayScore: prediction.AwayScore,
+		Joker:     *prediction.Joker,
+	})
+
+	if err := t.savePredictions(); err != nil {
+		http.Error(w, "failed to save predictions", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(prediction); err != nil {
+		log.Printf("failed to write response: %v", err)
+	}
+}
+
+func (t *Tournament) savePredictionsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var predictions []gen.ParticipantPrediction
+
+	if err := json.NewDecoder(r.Body).Decode(&predictions); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	participant := r.PathValue("participant")
+
+	for _, p := range predictions {
+		var joker bool
+		if p.Joker != nil {
+			joker = *p.Joker
+		}
+		var updated bool
+		for _, tp := range t.Predictions {
+			if tp.Participant != participant {
+				continue
+			}
+			if tp.ID == p.MatchId {
+				tp.HomeScore = p.HomeScore
+				tp.AwayScore = p.AwayScore
+				tp.Joker = joker
+				updated = true
+				break
+			}
+		}
+		if !updated {
+			t.Predictions = append(t.Predictions, &Prediction{
+				ID:          p.MatchId,
+				HomeScore:   p.HomeScore,
+				AwayScore:   p.AwayScore,
+				Joker:       joker,
+				Participant: participant,
+			})
+		}
+	}
+
+	if err := t.savePredictions(); err != nil {
+		http.Error(w, "failed to save predictions", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(predictions); err != nil {
+		log.Printf("failed to write response: %v", err)
+	}
+}
+
+func parseGetPredictionsParams(r *http.Request) (*gen.GetPredictionsParams, error) {
+	q := r.URL.Query()
+	params := &gen.GetPredictionsParams{}
+
+	if v := q.Get("matchId"); v != "" {
+		id, err := strconv.Atoi(v)
+		if err != nil {
+			return params, err
+		}
+		params.MatchId = &id
+	}
+
+	if v := q.Get("participant"); v != "" {
+		params.Participant = &v
+	}
+
+	return params, nil
+}
+
+func (t *Tournament) findMatch(id int) *Match {
+	for _, m := range t.Matches {
+		if m.ID == id {
+			return m
+		}
+	}
+	return nil
+}
+
+func (t *Tournament) filterPredictions(params *gen.GetPredictionsParams) []*Prediction {
+	predictions := []*Prediction{}
+	if params == nil {
+		return append(predictions, t.Predictions...)
+	}
+
+	for _, p := range t.Predictions {
+		if params.MatchId != nil {
+			if *params.MatchId != p.ID {
+				continue
+			}
+		}
+		if params.Participant != nil {
+			if *params.Participant != p.Participant {
+				continue
+			}
+		}
+		predictions = append(predictions, p)
+	}
+	return predictions
+}
+
+func (t *Tournament) savePredictions() error {
+	file, err := os.Create("data/predictions/predictions.csv")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = file.Close() }()
+
+	predictions := []*csvPrediction{}
+
+	for _, p := range t.Predictions {
+		match := t.findMatch(p.ID)
+		if match == nil {
+			continue
+		}
+		points, _ := p.scoreMatch(match)
+		predictions = append(predictions, &csvPrediction{
+			Participant: p.Participant,
+			ID:          p.ID,
+			Home:        match.Home,
+			HomeScore:   p.HomeScore,
+			AwayScore:   p.AwayScore,
+			Away:        match.Away,
+			Joker:       p.Joker,
+			Points:      points,
+		})
+	}
+
+	return gocsv.MarshalFile(&predictions, file)
 }

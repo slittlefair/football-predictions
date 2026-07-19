@@ -9,82 +9,98 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TournamentRouteImport } from './routes/tournament'
-import { Route as MissingPredictionsRouteImport } from './routes/missingPredictions'
-import { Route as MatchesRouteRouteImport } from './routes/matches/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as MatchesIndexRouteImport } from './routes/matches/index'
-import { Route as ParticipantsNameRouteImport } from './routes/participants.$name'
-import { Route as MatchesIdRouteImport } from './routes/matches/$id'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppTournamentRouteImport } from './routes/_app/tournament'
+import { Route as AppMissingPredictionsRouteImport } from './routes/_app/missingPredictions'
+import { Route as AppParticipantsRouteRouteImport } from './routes/_app/participants/route'
+import { Route as AppMatchesRouteRouteImport } from './routes/_app/matches/route'
+import { Route as AppMatchesIndexRouteImport } from './routes/_app/matches/index'
+import { Route as AppParticipantsNameRouteImport } from './routes/_app/participants/$name'
+import { Route as AppMatchesIdRouteImport } from './routes/_app/matches/$id'
 
-const TournamentRoute = TournamentRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTournamentRoute = AppTournamentRouteImport.update({
   id: '/tournament',
   path: '/tournament',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const MissingPredictionsRoute = MissingPredictionsRouteImport.update({
+const AppMissingPredictionsRoute = AppMissingPredictionsRouteImport.update({
   id: '/missingPredictions',
   path: '/missingPredictions',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const MatchesRouteRoute = MatchesRouteRouteImport.update({
+const AppParticipantsRouteRoute = AppParticipantsRouteRouteImport.update({
+  id: '/participants',
+  path: '/participants',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMatchesRouteRoute = AppMatchesRouteRouteImport.update({
   id: '/matches',
   path: '/matches',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AppMatchesIndexRoute = AppMatchesIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppMatchesRouteRoute,
 } as any)
-const MatchesIndexRoute = MatchesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MatchesRouteRoute,
+const AppParticipantsNameRoute = AppParticipantsNameRouteImport.update({
+  id: '/$name',
+  path: '/$name',
+  getParentRoute: () => AppParticipantsRouteRoute,
 } as any)
-const ParticipantsNameRoute = ParticipantsNameRouteImport.update({
-  id: '/participants/$name',
-  path: '/participants/$name',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MatchesIdRoute = MatchesIdRouteImport.update({
+const AppMatchesIdRoute = AppMatchesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => MatchesRouteRoute,
+  getParentRoute: () => AppMatchesRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/matches': typeof MatchesRouteRouteWithChildren
-  '/missingPredictions': typeof MissingPredictionsRoute
-  '/tournament': typeof TournamentRoute
-  '/matches/$id': typeof MatchesIdRoute
-  '/participants/$name': typeof ParticipantsNameRoute
-  '/matches/': typeof MatchesIndexRoute
+  '/': typeof AppIndexRoute
+  '/matches': typeof AppMatchesRouteRouteWithChildren
+  '/participants': typeof AppParticipantsRouteRouteWithChildren
+  '/missingPredictions': typeof AppMissingPredictionsRoute
+  '/tournament': typeof AppTournamentRoute
+  '/matches/$id': typeof AppMatchesIdRoute
+  '/participants/$name': typeof AppParticipantsNameRoute
+  '/matches/': typeof AppMatchesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/missingPredictions': typeof MissingPredictionsRoute
-  '/tournament': typeof TournamentRoute
-  '/matches/$id': typeof MatchesIdRoute
-  '/participants/$name': typeof ParticipantsNameRoute
-  '/matches': typeof MatchesIndexRoute
+  '/participants': typeof AppParticipantsRouteRouteWithChildren
+  '/missingPredictions': typeof AppMissingPredictionsRoute
+  '/tournament': typeof AppTournamentRoute
+  '/': typeof AppIndexRoute
+  '/matches/$id': typeof AppMatchesIdRoute
+  '/participants/$name': typeof AppParticipantsNameRoute
+  '/matches': typeof AppMatchesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/matches': typeof MatchesRouteRouteWithChildren
-  '/missingPredictions': typeof MissingPredictionsRoute
-  '/tournament': typeof TournamentRoute
-  '/matches/$id': typeof MatchesIdRoute
-  '/participants/$name': typeof ParticipantsNameRoute
-  '/matches/': typeof MatchesIndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/_app/matches': typeof AppMatchesRouteRouteWithChildren
+  '/_app/participants': typeof AppParticipantsRouteRouteWithChildren
+  '/_app/missingPredictions': typeof AppMissingPredictionsRoute
+  '/_app/tournament': typeof AppTournamentRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/matches/$id': typeof AppMatchesIdRoute
+  '/_app/participants/$name': typeof AppParticipantsNameRoute
+  '/_app/matches/': typeof AppMatchesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/matches'
+    | '/participants'
     | '/missingPredictions'
     | '/tournament'
     | '/matches/$id'
@@ -92,105 +108,143 @@ export interface FileRouteTypes {
     | '/matches/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/participants'
     | '/missingPredictions'
     | '/tournament'
+    | '/'
     | '/matches/$id'
     | '/participants/$name'
     | '/matches'
   id:
     | '__root__'
-    | '/'
-    | '/matches'
-    | '/missingPredictions'
-    | '/tournament'
-    | '/matches/$id'
-    | '/participants/$name'
-    | '/matches/'
+    | '/_app'
+    | '/_app/matches'
+    | '/_app/participants'
+    | '/_app/missingPredictions'
+    | '/_app/tournament'
+    | '/_app/'
+    | '/_app/matches/$id'
+    | '/_app/participants/$name'
+    | '/_app/matches/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  MatchesRouteRoute: typeof MatchesRouteRouteWithChildren
-  MissingPredictionsRoute: typeof MissingPredictionsRoute
-  TournamentRoute: typeof TournamentRoute
-  ParticipantsNameRoute: typeof ParticipantsNameRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tournament': {
-      id: '/tournament'
-      path: '/tournament'
-      fullPath: '/tournament'
-      preLoaderRoute: typeof TournamentRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/missingPredictions': {
-      id: '/missingPredictions'
-      path: '/missingPredictions'
-      fullPath: '/missingPredictions'
-      preLoaderRoute: typeof MissingPredictionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/matches': {
-      id: '/matches'
-      path: '/matches'
-      fullPath: '/matches'
-      preLoaderRoute: typeof MatchesRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/matches/': {
-      id: '/matches/'
+    '/_app/tournament': {
+      id: '/_app/tournament'
+      path: '/tournament'
+      fullPath: '/tournament'
+      preLoaderRoute: typeof AppTournamentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/missingPredictions': {
+      id: '/_app/missingPredictions'
+      path: '/missingPredictions'
+      fullPath: '/missingPredictions'
+      preLoaderRoute: typeof AppMissingPredictionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/participants': {
+      id: '/_app/participants'
+      path: '/participants'
+      fullPath: '/participants'
+      preLoaderRoute: typeof AppParticipantsRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/matches': {
+      id: '/_app/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof AppMatchesRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/matches/': {
+      id: '/_app/matches/'
       path: '/'
       fullPath: '/matches/'
-      preLoaderRoute: typeof MatchesIndexRouteImport
-      parentRoute: typeof MatchesRouteRoute
+      preLoaderRoute: typeof AppMatchesIndexRouteImport
+      parentRoute: typeof AppMatchesRouteRoute
     }
-    '/participants/$name': {
-      id: '/participants/$name'
-      path: '/participants/$name'
+    '/_app/participants/$name': {
+      id: '/_app/participants/$name'
+      path: '/$name'
       fullPath: '/participants/$name'
-      preLoaderRoute: typeof ParticipantsNameRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppParticipantsNameRouteImport
+      parentRoute: typeof AppParticipantsRouteRoute
     }
-    '/matches/$id': {
-      id: '/matches/$id'
+    '/_app/matches/$id': {
+      id: '/_app/matches/$id'
       path: '/$id'
       fullPath: '/matches/$id'
-      preLoaderRoute: typeof MatchesIdRouteImport
-      parentRoute: typeof MatchesRouteRoute
+      preLoaderRoute: typeof AppMatchesIdRouteImport
+      parentRoute: typeof AppMatchesRouteRoute
     }
   }
 }
 
-interface MatchesRouteRouteChildren {
-  MatchesIdRoute: typeof MatchesIdRoute
-  MatchesIndexRoute: typeof MatchesIndexRoute
+interface AppMatchesRouteRouteChildren {
+  AppMatchesIdRoute: typeof AppMatchesIdRoute
+  AppMatchesIndexRoute: typeof AppMatchesIndexRoute
 }
 
-const MatchesRouteRouteChildren: MatchesRouteRouteChildren = {
-  MatchesIdRoute: MatchesIdRoute,
-  MatchesIndexRoute: MatchesIndexRoute,
+const AppMatchesRouteRouteChildren: AppMatchesRouteRouteChildren = {
+  AppMatchesIdRoute: AppMatchesIdRoute,
+  AppMatchesIndexRoute: AppMatchesIndexRoute,
 }
 
-const MatchesRouteRouteWithChildren = MatchesRouteRoute._addFileChildren(
-  MatchesRouteRouteChildren,
+const AppMatchesRouteRouteWithChildren = AppMatchesRouteRoute._addFileChildren(
+  AppMatchesRouteRouteChildren,
 )
 
+interface AppParticipantsRouteRouteChildren {
+  AppParticipantsNameRoute: typeof AppParticipantsNameRoute
+}
+
+const AppParticipantsRouteRouteChildren: AppParticipantsRouteRouteChildren = {
+  AppParticipantsNameRoute: AppParticipantsNameRoute,
+}
+
+const AppParticipantsRouteRouteWithChildren =
+  AppParticipantsRouteRoute._addFileChildren(AppParticipantsRouteRouteChildren)
+
+interface AppRouteChildren {
+  AppMatchesRouteRoute: typeof AppMatchesRouteRouteWithChildren
+  AppParticipantsRouteRoute: typeof AppParticipantsRouteRouteWithChildren
+  AppMissingPredictionsRoute: typeof AppMissingPredictionsRoute
+  AppTournamentRoute: typeof AppTournamentRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppMatchesRouteRoute: AppMatchesRouteRouteWithChildren,
+  AppParticipantsRouteRoute: AppParticipantsRouteRouteWithChildren,
+  AppMissingPredictionsRoute: AppMissingPredictionsRoute,
+  AppTournamentRoute: AppTournamentRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  MatchesRouteRoute: MatchesRouteRouteWithChildren,
-  MissingPredictionsRoute: MissingPredictionsRoute,
-  TournamentRoute: TournamentRoute,
-  ParticipantsNameRoute: ParticipantsNameRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

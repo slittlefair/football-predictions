@@ -101,4 +101,4 @@ const App = () => {
   );
 };
 
-export const Route = createFileRoute('/')({ component: App });
+export const Route = createFileRoute('/_app/')({ component: App });
